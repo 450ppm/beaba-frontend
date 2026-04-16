@@ -1,0 +1,93 @@
+.new-campaign-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 24px;
+}
+
+.new-campaign-card {
+  background: #1e1e2e;
+  border-radius: 16px;
+  padding: 32px 24px;
+  width: 100%;
+  max-width: 420px;
+  text-align: center;
+}
+
+.new-campaign-logo {
+  height: 40px;
+  margin-bottom: 24px;
+}
+
+.new-campaign-card h1 {
+  font-size: 1.4rem;
+  color: #e0e0e0;
+  margin-bottom: 8px;
+}
+
+.new-campaign-subtitle {
+  font-size: 0.9rem;
+  color: #888;
+  margin-bottom: 24px;
+}
+
+.new-campaign-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  text-align: left;
+}
+
+.new-campaign-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.new-campaign-form label span {
+  font-size: 0.85rem;
+  color: #aaa;
+}
+
+.new-campaign-form input {
+  background: #12121a;
+  border: 1px solid #2a2a3a;
+  border-radius: 8px;
+  padding: 12px;
+  color: #e0e0e0;
+  font-size: 1rem;
+}
+
+.new-campaign-form input:focus {
+  outline: none;
+  border-color: #f5a623;
+}
+
+.new-campaign-form button {
+  background: #f5a623;
+  color: #12121a;
+  border: none;
+  border-radius: 8px;
+  padding: 14px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 8px;
+  min-height: 48px;
+}
+
+.new-campaign-form button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.new-campaign-form button:hover:not(:disabled) {
+  background: #e6991a;
+}
+
+.new-campaign-error {
+  color: #ff6b6b;
+  font-size: 0.9rem;
+  text-align: center;
+}

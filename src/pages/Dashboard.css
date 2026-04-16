@@ -1,0 +1,103 @@
+.dashboard {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.dashboard h2 {
+  color: #e0e0e0;
+  font-size: 1.1rem;
+  margin: 24px 0 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 500;
+}
+
+.dashboard-summary {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.summary-card {
+  background: #1e1e2e;
+  border-radius: 12px;
+  padding: 20px 24px;
+  flex: 1;
+  min-width: 200px;
+}
+
+.summary-label {
+  font-size: 0.85rem;
+  color: #888;
+  margin-bottom: 4px;
+}
+
+.summary-value {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #f5a623;
+}
+
+.summary-value small {
+  font-size: 1rem;
+  font-weight: 400;
+  color: #888;
+}
+
+.device-count .summary-value {
+  color: #64b5f6;
+}
+
+.temp-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.room-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 60vh;
+  color: #888;
+  font-size: 1.2rem;
+}
+
+.empty {
+  color: #666;
+  font-style: italic;
+}
+
+.dashboard-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 16px;
+}
+
+.btn-complete {
+  background: transparent;
+  border: 1px solid #ff6b6b;
+  color: #ff6b6b;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  min-height: 44px;
+}
+
+.btn-complete:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-complete:hover:not(:disabled) {
+  background: rgba(255, 107, 107, 0.15);
+}

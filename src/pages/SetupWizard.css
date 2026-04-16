@@ -1,0 +1,320 @@
+.setup-wizard {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 16px;
+  min-height: 100vh;
+}
+
+.setup-header {
+  text-align: center;
+  padding: 16px 0 0;
+}
+
+.setup-logo {
+  height: 36px;
+  margin-bottom: 12px;
+}
+
+.setup-header h1 {
+  font-size: 1.2rem;
+  color: #e0e0e0;
+  font-weight: 500;
+}
+
+.setup-content {
+  padding: 0 4px;
+}
+
+.setup-loading {
+  text-align: center;
+  color: #888;
+  padding: 40px 0;
+}
+
+/* ── Step panel ─────────────────────────────────── */
+.step-panel h2 {
+  font-size: 1.15rem;
+  color: #e0e0e0;
+  margin-bottom: 4px;
+}
+
+.step-desc {
+  font-size: 0.9rem;
+  color: #888;
+  margin-bottom: 20px;
+}
+
+/* ── Room list ──────────────────────────────────── */
+.room-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.room-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #1e1e2e;
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+
+.room-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.room-item-name {
+  flex: 1;
+  color: #e0e0e0;
+}
+
+.btn-delete {
+  background: none;
+  border: 1px solid #ff6b6b;
+  color: #ff6b6b;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  min-height: 36px;
+}
+
+.btn-delete:hover {
+  background: rgba(255, 107, 107, 0.15);
+}
+
+/* ── Add form ───────────────────────────────────── */
+.add-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: #1e1e2e;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.add-form input[type="text"] {
+  background: #12121a;
+  border: 1px solid #2a2a3a;
+  border-radius: 8px;
+  padding: 12px;
+  color: #e0e0e0;
+  font-size: 1rem;
+}
+
+.add-form input:focus {
+  outline: none;
+  border-color: #f5a623;
+}
+
+/* ── Buttons ────────────────────────────────────── */
+.btn-primary {
+  background: #f5a623;
+  color: #12121a;
+  border: none;
+  border-radius: 8px;
+  padding: 14px 24px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  min-height: 48px;
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #e6991a;
+}
+
+.btn-secondary {
+  background: transparent;
+  border: 1px solid #f5a623;
+  color: #f5a623;
+  border-radius: 8px;
+  padding: 12px 20px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  min-height: 44px;
+}
+
+.btn-secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: rgba(245, 166, 35, 0.1);
+}
+
+.btn-back {
+  background: none;
+  border: 1px solid #555;
+  color: #aaa;
+  border-radius: 8px;
+  padding: 12px 20px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  min-height: 44px;
+}
+
+.btn-back:hover {
+  border-color: #888;
+  color: #ccc;
+}
+
+.btn-refresh {
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+.btn-activate {
+  flex: 1;
+}
+
+/* ── Step navigation ────────────────────────────── */
+.step-nav {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 24px;
+  padding-bottom: 32px;
+}
+
+/* ── Device assignment cards ────────────────────── */
+.device-assign-card {
+  background: #1e1e2e;
+  border-radius: 10px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.device-name {
+  color: #e0e0e0;
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+.device-assign-card select,
+.device-assign-card input[type="text"] {
+  background: #12121a;
+  border: 1px solid #2a2a3a;
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: #e0e0e0;
+  font-size: 0.95rem;
+  min-height: 44px;
+}
+
+.device-assign-card select:focus,
+.device-assign-card input:focus {
+  outline: none;
+  border-color: #f5a623;
+}
+
+/* ── Assigned / Unassigned sections ─────────────── */
+.assigned-section,
+.unassigned-section {
+  margin-bottom: 20px;
+}
+
+.assigned-section h3,
+.unassigned-section h3 {
+  font-size: 0.95rem;
+  color: #aaa;
+  margin-bottom: 10px;
+  font-weight: 500;
+}
+
+.assigned-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #1e1e2e;
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+
+.assigned-name {
+  color: #e0e0e0;
+  font-weight: 500;
+}
+
+.assigned-room {
+  color: #f5a623;
+  font-size: 0.85rem;
+}
+
+.assigned-comment {
+  color: #888;
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
+/* ── Summary step ───────────────────────────────── */
+.summary-rooms {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.summary-room-card {
+  background: #1e1e2e;
+  border-radius: 10px;
+  padding: 14px;
+}
+
+.summary-room-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #e0e0e0;
+  margin-bottom: 8px;
+}
+
+.summary-devices {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.summary-device-label {
+  font-size: 0.8rem;
+  color: #888;
+  margin-right: 2px;
+}
+
+.summary-device-tag {
+  background: #2a2a3a;
+  color: #ccc;
+  font-size: 0.8rem;
+  padding: 4px 10px;
+  border-radius: 12px;
+}
+
+/* ── Misc ───────────────────────────────────────── */
+.empty-hint {
+  color: #666;
+  font-style: italic;
+  font-size: 0.9rem;
+  text-align: center;
+  padding: 12px 0;
+}

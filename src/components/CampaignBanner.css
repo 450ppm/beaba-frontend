@@ -1,0 +1,40 @@
+.campaign-banner {
+  background: #1e1e2e;
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 16px;
+}
+
+.banner-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.banner-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #e0e0e0;
+}
+
+.banner-day {
+  font-size: 0.9rem;
+  color: #f5a623;
+  font-weight: 600;
+}
+
+.banner-bar-track {
+  width: 100%;
+  height: 6px;
+  background: #2a2a3a;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.banner-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #f5a623, #ff8c00);
+  border-radius: 3px;
+  transition: width 0.5s ease;
+}

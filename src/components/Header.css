@@ -1,0 +1,46 @@
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 24px;
+  background: #16161e;
+  border-bottom: 1px solid #2a2a3a;
+}
+
+.header-logo {
+  height: 36px;
+}
+
+.header-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header-kit {
+  color: #ccc;
+  font-size: 0.9rem;
+}
+
+.header-status {
+  font-size: 0.8rem;
+  color: #4caf50;
+  background: rgba(76, 175, 80, 0.15);
+  padding: 2px 10px;
+  border-radius: 12px;
+}
+
+.header-status.status-setup {
+  color: #f5a623;
+  background: rgba(245, 166, 35, 0.15);
+}
+
+.header-status.status-active {
+  color: #4caf50;
+  background: rgba(76, 175, 80, 0.15);
+}
+
+.header-status.status-completed {
+  color: #64b5f6;
+  background: rgba(100, 181, 246, 0.15);
+}
