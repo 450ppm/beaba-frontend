@@ -58,23 +58,23 @@ export default function LandingPage() {
         <div className="landing-cards">
           <div className="landing-card">
             <span className="landing-card-icon">🌡️</span>
-            <h3>Temperature &amp; Humidite</h3>
-            <p>6 capteurs Sonoff SNZB-02P mesurent le confort thermique dans chaque piece</p>
+            <h3>Temperature &amp; humidite</h3>
+            <p>Des capteurs mesurent le confort thermique dans chaque piece du logement</p>
           </div>
           <div className="landing-card">
             <span className="landing-card-icon">⚡</span>
             <h3>Consommation electrique</h3>
-            <p>10 prises connectees Innr SP 240 mesurent la puissance de chaque appareil</p>
+            <p>Des prises connectees mesurent la puissance appelee par chaque appareil</p>
           </div>
           <div className="landing-card">
             <span className="landing-card-icon">🌬️</span>
             <h3>Qualite de l'air</h3>
-            <p>Capteur CO2 Heiman HS3AQ pour surveiller la ventilation et la qualite de l'air interieur</p>
+            <p>Un capteur CO2 suit la ventilation et la qualite de l'air interieur</p>
           </div>
           <div className="landing-card">
             <span className="landing-card-icon">💧</span>
             <h3>Compteurs</h3>
-            <p>Releves des compteurs d'eau, gaz et electricite en debut et fin de campagne</p>
+            <p>Releves des compteurs d'eau, de gaz et d'electricite en debut et fin de campagne</p>
           </div>
         </div>
       </section>
