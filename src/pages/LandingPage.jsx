@@ -1,7 +1,10 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import './LandingPage.css';
 
 export default function LandingPage() {
+  const [showVideo, setShowVideo] = useState(false);
+
   return (
     <div className="landing">
       {/* Hero */}
@@ -11,8 +14,42 @@ export default function LandingPage() {
           Rendre visible et comprehensible la consommation d'electricite, de gaz
           et d'eau des logements pour encourager le changement de comportement.
         </p>
-        <Link to="/login" className="landing-cta">Acces conseiller</Link>
+        <div className="landing-cta-row">
+          <Link to="/login" className="landing-cta">Acces conseiller</Link>
+          <button
+            type="button"
+            className="landing-cta landing-cta-video"
+            onClick={() => setShowVideo(true)}
+          >
+            <span className="landing-cta-play">▶</span>
+            Decouvrir le projet en video
+          </button>
+        </div>
       </section>
+
+      {/* Video modal */}
+      {showVideo && (
+        <div className="video-modal-overlay" onClick={() => setShowVideo(false)}>
+          <div className="video-modal" onClick={e => e.stopPropagation()}>
+            <button
+              className="video-modal-close"
+              onClick={() => setShowVideo(false)}
+              aria-label="Fermer"
+            >
+              ✕
+            </button>
+            <div className="video-modal-iframe-wrapper">
+              <iframe
+                src="https://www.youtube.com/embed/3FrPZTTOWNU?start=596&autoplay=1"
+                title="Beaba — Decouvrir le projet"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Le kit */}
       <section className="landing-section">
