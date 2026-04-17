@@ -449,3 +449,9 @@
   border-radius: 16px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
 }
+
+.landing-github-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
