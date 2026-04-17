@@ -77,6 +77,9 @@ export default function LandingPage() {
             <p>Releves des compteurs d'eau, de gaz et d'electricite en debut et fin de campagne</p>
           </div>
         </div>
+        <div className="landing-kit-image">
+          <img src="/kit.png" alt="Le kit Beaba" />
+        </div>
       </section>
 
       {/* Comment ca marche */}

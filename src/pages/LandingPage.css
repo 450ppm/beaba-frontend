@@ -435,3 +435,17 @@
     max-width: 320px;
   }
 }
+
+/* ── Kit image ──────────────────────────────────────────── */
+.landing-kit-image {
+  margin-top: 48px;
+  display: flex;
+  justify-content: center;
+}
+
+.landing-kit-image img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+}
