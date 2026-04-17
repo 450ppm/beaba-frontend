@@ -507,3 +507,128 @@
 
   .rp-kpi-value { font-size: 1.7rem; }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   Bloc fin de campagne + Modal nouvelle campagne
+   ═══════════════════════════════════════════════════════════ */
+
+.rp-new-campaign-block {
+  margin-top: 48px;
+  padding: 28px 32px;
+  background: rgba(239, 68, 68, 0.04);
+  border: 1px solid rgba(239, 68, 68, 0.15);
+  border-radius: 14px;
+  text-align: center;
+}
+
+.rp-new-campaign-block h3 {
+  margin: 0 0 8px;
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.rp-new-campaign-block p {
+  margin: 0 0 20px;
+  color: #888;
+  font-size: 0.92rem;
+}
+
+.rp-btn-danger {
+  background: rgba(239, 68, 68, 0.1);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+}
+
+.rp-btn-danger:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: #ef4444;
+}
+
+.rp-btn-danger:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Modal */
+.rp-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 20px;
+  animation: fadeIn 0.15s ease;
+}
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.rp-modal {
+  background: #1a1a2e;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 16px;
+  padding: 32px;
+  max-width: 520px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  text-align: center;
+  animation: slideUp 0.2s ease;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.rp-modal-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  font-size: 1.8rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+}
+
+.rp-modal h2 {
+  margin: 0 0 16px;
+  color: #fff;
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.rp-modal-text {
+  color: #ccc;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin: 0 0 12px;
+}
+
+.rp-modal-text strong {
+  color: #fff;
+}
+
+.rp-modal-download {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin: 24px 0;
+  flex-wrap: wrap;
+}
+
+.rp-modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  flex-wrap: wrap;
+}

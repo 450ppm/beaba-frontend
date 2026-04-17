@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   LineChart, Line, Area, AreaChart, CartesianGrid, Legend,
@@ -15,11 +16,15 @@ const TABS = [
 ];
 
 export default function ReportPage() {
-  const { campaign } = useCampaign();
+  const { campaign, refreshCampaign } = useCampaign();
+  const navigate = useNavigate();
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [tab, setTab] = useState('overview');
+  const [showNewCampaignModal, setShowNewCampaignModal] = useState(false);
+  const [wiping, setWiping] = useState(false);
+  const [archiveDownloaded, setArchiveDownloaded] = useState(false);
 
   useEffect(() => {
     if (!campaign?.id) return;
@@ -33,10 +38,23 @@ export default function ReportPage() {
   const handleExportCsv = () => {
     if (!campaign?.id) return;
     window.open(`${api.defaults.baseURL}/api/export/${campaign.id}/csv`, '_blank');
+    setArchiveDownloaded(true);
   };
 
   const handleOpenPrint = () => {
     window.open('/app/report/print', '_blank');
+  };
+
+  const handleWipeAndNew = async () => {
+    setWiping(true);
+    try {
+      await api.post('/api/campaign/wipe');
+      await refreshCampaign();
+      navigate('/app');
+    } catch (err) {
+      alert('Erreur lors de l\'effacement : ' + (err.response?.data?.error || err.message));
+    }
+    setWiping(false);
   };
 
   const avgOutsideComfort = useMemo(() => {
@@ -65,7 +83,7 @@ export default function ReportPage() {
             </div>
           </div>
           <div className="rp-topbar-actions">
-            <button className="rp-btn rp-btn-ghost" onClick={handleExportCsv}>Exporter CSV</button>
+            <button className="rp-btn rp-btn-ghost" onClick={handleExportCsv}>Telecharger l'archive</button>
             <button className="rp-btn rp-btn-primary" onClick={handleOpenPrint}>Telecharger PDF</button>
           </div>
         </div>
@@ -95,7 +113,70 @@ export default function ReportPage() {
         {tab === 'recommendations' && (
           <RecommendationsTab recommendations={recommendations} />
         )}
+
+        {/* Fin de campagne */}
+        <div className="rp-new-campaign-block">
+          <h3>Demarrer une nouvelle campagne</h3>
+          <p>Vous avez termine cette campagne ? Vous pouvez maintenant deployer le kit chez un nouveau foyer.</p>
+          <button
+            className="rp-btn rp-btn-danger"
+            onClick={() => setShowNewCampaignModal(true)}
+          >
+            Nouvelle campagne
+          </button>
+        </div>
       </div>
+
+      {/* Modal confirmation */}
+      {showNewCampaignModal && (
+        <div className="rp-modal-overlay" onClick={() => !wiping && setShowNewCampaignModal(false)}>
+          <div className="rp-modal" onClick={e => e.stopPropagation()}>
+            <div className="rp-modal-icon">!</div>
+            <h2>Attention — Donnees irrecuperables</h2>
+            <p className="rp-modal-text">
+              Demarrer une nouvelle campagne va <strong>effacer definitivement</strong> toutes les donnees de la campagne <strong>{cam.household}</strong>.
+            </p>
+            <p className="rp-modal-text">
+              Assurez-vous d'avoir telecharge l'archive complete avant de continuer.
+            </p>
+
+            <div className="rp-modal-download">
+              <button
+                className={`rp-btn ${archiveDownloaded ? 'rp-btn-ghost' : 'rp-btn-primary'}`}
+                onClick={handleExportCsv}
+                disabled={wiping}
+              >
+                {archiveDownloaded ? 'Archive telechargee ✓' : 'Telecharger l\'archive'}
+              </button>
+              <button
+                className="rp-btn rp-btn-ghost"
+                onClick={handleOpenPrint}
+                disabled={wiping}
+              >
+                Telecharger PDF
+              </button>
+            </div>
+
+            <div className="rp-modal-actions">
+              <button
+                className="rp-btn rp-btn-ghost"
+                onClick={() => setShowNewCampaignModal(false)}
+                disabled={wiping}
+              >
+                Annuler
+              </button>
+              <button
+                className="rp-btn rp-btn-danger"
+                onClick={handleWipeAndNew}
+                disabled={wiping || !archiveDownloaded}
+                title={!archiveDownloaded ? 'Telechargez d\'abord l\'archive' : ''}
+              >
+                {wiping ? 'Effacement...' : 'Effacer et demarrer une nouvelle campagne'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
