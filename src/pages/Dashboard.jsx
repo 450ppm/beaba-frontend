@@ -1,16 +1,19 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useRef, useState, useEffect } from 'react';
 import api from '../api';
 import { useCampaign } from '../context/CampaignContext';
 import usePolling from '../hooks/usePolling';
 import CampaignBanner from '../components/CampaignBanner';
+import DashboardCharts from '../components/DashboardCharts';
+import KpiCard from '../components/KpiCard';
+import ApplianceList from '../components/ApplianceList';
+import SensorList from '../components/SensorList';
 import RoomCard from '../components/RoomCard';
-import TempCard from '../components/TempCard';
 import './Dashboard.css';
 
-export default function Dashboard() {
-  const { campaign, refreshCampaign } = useCampaign();
-  const [completing, setCompleting] = useState(false);
+export default function Dashboard({ onRequestEndMeters }) {
+  const { campaign } = useCampaign();
 
+  /* ── API polling ─────────────────────────────────────── */
   const { data: mapData, loading: mapLoading } = usePolling(
     useCallback(() => api.get('/api/map'), []),
     10000
@@ -26,73 +29,129 @@ export default function Dashboard() {
     10000
   );
 
+  /* ── KPI computations ────────────────────────────────── */
   const totalPower = powerData?.reduce((sum, r) => sum + (r.power_w || 0), 0) ?? 0;
+  const activeDevices = powerData?.filter((r) => (r.power_w || 0) > 1).length ?? 0;
+  const totalDevices = powerData?.length ?? 0;
 
-  const completeCampaign = async () => {
-    if (!campaign?.id) return;
-    setCompleting(true);
-    try {
-      await api.post(`/api/campaign/${campaign.id}/complete`);
-      await refreshCampaign();
-    } catch { /* empty */ }
-    setCompleting(false);
-  };
+  const avgTemp = useMemo(() => {
+    if (!tempData || !tempData.length) return null;
+    const temps = tempData.filter((s) => s.temperature_c != null).map((s) => s.temperature_c);
+    if (!temps.length) return null;
+    const avg = temps.reduce((a, b) => a + b, 0) / temps.length;
+    const min = Math.min(...temps);
+    const max = Math.max(...temps);
+    return { avg, min, max };
+  }, [tempData]);
 
+  // Track last 12 total-power readings for sparkline
+  const powerHistoryRef = useRef([]);
+  useEffect(() => {
+    if (totalPower > 0) {
+      powerHistoryRef.current = [...powerHistoryRef.current.slice(-11), totalPower];
+    }
+  }, [totalPower]);
+
+  /* ── Daily consumption estimate (rough: average W * hours elapsed) ── */
+  const dailyKwh = useMemo(() => {
+    const now = new Date();
+    const hoursElapsed = now.getHours() + now.getMinutes() / 60;
+    if (hoursElapsed < 0.1 || totalPower === 0) return 0;
+    // Very rough estimate: current power * hours / 1000
+    return ((totalPower * hoursElapsed) / 1000).toFixed(2);
+  }, [totalPower]);
+
+  /* ── Loading state ───────────────────────────────────── */
   if (mapLoading && tempLoading) {
-    return <div className="loading">Chargement...</div>;
+    return (
+      <div className="db-loading">
+        <div className="db-loading-spinner" />
+        <span>Chargement du tableau de bord...</span>
+      </div>
+    );
   }
 
   return (
-    <div className="dashboard">
-      <CampaignBanner />
+    <div className="db">
+      {/* ── Top strip ────────────────────────────────── */}
+      <CampaignBanner onRequestEndMeters={onRequestEndMeters} />
 
-      <div className="dashboard-actions">
-        <button
-          className="btn-complete"
-          onClick={completeCampaign}
-          disabled={completing}
+      {/* ── KPI row ──────────────────────────────────── */}
+      <div className="db-kpi-row">
+        <KpiCard
+          label="Puissance instantanee"
+          value={totalPower.toFixed(0)}
+          unit="W"
+          accent="orange"
+          sparklineData={powerHistoryRef.current}
+        />
+        <KpiCard
+          label="Consommation du jour"
+          value={dailyKwh}
+          unit="kWh"
+          accent="orange"
+          subtitle="Estimation basee sur la puissance actuelle"
+        />
+        <KpiCard
+          label="Appareils actifs"
+          value={activeDevices}
+          unit={`/ ${totalDevices}`}
+          accent="green"
         >
-          {completing ? 'Finalisation...' : 'Terminer la campagne'}
-        </button>
+          {activeDevices > 0 && (
+            <div className="kpi-active-dots">
+              {Array.from({ length: Math.min(activeDevices, 5) }).map((_, i) => (
+                <span key={i} className="kpi-active-dot" />
+              ))}
+            </div>
+          )}
+        </KpiCard>
+        <KpiCard
+          label="Temperature moyenne"
+          value={avgTemp ? avgTemp.avg.toFixed(1) : '--'}
+          unit="°C"
+          accent="blue"
+          subtitle={
+            avgTemp
+              ? `Min ${avgTemp.min.toFixed(1)}° / Max ${avgTemp.max.toFixed(1)}°`
+              : 'En attente des capteurs'
+          }
+        />
       </div>
 
-      <div className="dashboard-summary">
-        <div className="summary-card total-power">
-          <div className="summary-label">Puissance totale</div>
-          <div className="summary-value">{totalPower.toFixed(0)} <small>W</small></div>
+      {/* ── Main content: chart + panels ──────────────── */}
+      <div className="db-main">
+        <div className="db-main-left">
+          <DashboardCharts />
         </div>
-        <div className="summary-card device-count">
-          <div className="summary-label">Appareils actifs</div>
-          <div className="summary-value">
-            {powerData?.filter((r) => r.power_w > 1).length ?? 0}
-            <small> / {powerData?.length ?? 0}</small>
+        <div className="db-main-right">
+          <ApplianceList powerData={powerData} />
+          <SensorList tempData={tempData} />
+        </div>
+      </div>
+
+      {/* ── Bottom strip: room overview ───────────────── */}
+      <div className="db-bottom">
+        <h3 className="db-section-title">Pieces</h3>
+        {mapData && mapData.length > 0 ? (
+          <div className="room-scroll">
+            {mapData.map((room) => (
+              <RoomCard key={room.id} room={room} />
+            ))}
           </div>
-        </div>
+        ) : (
+          <p className="db-empty">Aucune piece configuree.</p>
+        )}
       </div>
 
-      <section>
-        <h2>Temperatures</h2>
-        <div className="temp-grid">
-          {tempData?.map((s) => (
-            <TempCard key={s.sensor_id} sensor={s} />
-          ))}
-          {(!tempData || tempData.length === 0) && (
-            <p className="empty">En attente des capteurs...</p>
-          )}
+      {/* ── End campaign button ──────────────────────── */}
+      {onRequestEndMeters && (
+        <div className="db-end-campaign">
+          <button className="db-end-btn" onClick={onRequestEndMeters}>
+            Terminer la campagne
+          </button>
         </div>
-      </section>
-
-      <section>
-        <h2>Pieces</h2>
-        <div className="room-grid">
-          {mapData?.map((room) => (
-            <RoomCard key={room.id} room={room} />
-          ))}
-          {(!mapData || mapData.length === 0) && (
-            <p className="empty">Aucune piece configuree.</p>
-          )}
-        </div>
-      </section>
+      )}
     </div>
   );
 }

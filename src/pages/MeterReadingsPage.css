@@ -1,0 +1,229 @@
+.meter-readings-page {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 3rem;
+}
+
+.meter-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.meter-header h1 {
+  font-size: 1.5rem;
+  color: #f5a623;
+  margin: 0 0 0.5rem;
+}
+
+.meter-description {
+  color: #888;
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+/* ── Cards ─────────────────────────────────────────────────── */
+
+.meter-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.meter-card {
+  background: #1e1e2e;
+  border-radius: 12px;
+  padding: 1.25rem;
+  border: 1px solid #2a2a3c;
+  transition: border-color 0.2s;
+}
+
+.meter-card-done {
+  border-color: #4caf50;
+}
+
+.meter-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.meter-card-header h3 {
+  margin: 0;
+  flex: 1;
+  font-size: 1.1rem;
+  color: #eee;
+}
+
+.meter-icon {
+  font-size: 1.5rem;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+}
+
+.meter-icon-electricity {
+  background: rgba(245, 166, 35, 0.15);
+}
+
+.meter-icon-gas {
+  background: rgba(66, 133, 244, 0.15);
+}
+
+.meter-icon-water {
+  background: rgba(0, 188, 212, 0.15);
+}
+
+.meter-check {
+  font-size: 1.3rem;
+}
+
+/* ── Other phase info ──────────────────────────────────────── */
+
+.meter-other-phase {
+  font-size: 0.85rem;
+  color: #888;
+  margin-bottom: 0.75rem;
+  padding: 0.4rem 0.75rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 6px;
+}
+
+/* ── Existing reading display ──────────────────────────────── */
+
+.meter-existing {
+  text-align: center;
+  padding: 0.75rem 0;
+}
+
+.meter-existing-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #f5f5f5;
+}
+
+.meter-unit {
+  font-size: 1rem;
+  font-weight: 400;
+  color: #888;
+}
+
+.meter-existing-notes {
+  color: #888;
+  font-size: 0.85rem;
+  margin-top: 0.25rem;
+}
+
+.meter-existing-date {
+  color: #666;
+  font-size: 0.8rem;
+  margin-top: 0.5rem;
+}
+
+/* ── Form ──────────────────────────────────────────────────── */
+
+.meter-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.meter-input-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.meter-input {
+  flex: 1;
+  background: #12121a;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 0.85rem 1rem;
+  font-size: 1.2rem;
+  color: #f5f5f5;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.meter-input:focus {
+  border-color: #f5a623;
+}
+
+.meter-input-unit {
+  color: #888;
+  font-size: 0.95rem;
+  min-width: 2.5rem;
+}
+
+.meter-notes-input {
+  background: #12121a;
+  border: 1px solid #2a2a3c;
+  border-radius: 8px;
+  padding: 0.65rem 1rem;
+  font-size: 0.9rem;
+  color: #ccc;
+  outline: none;
+}
+
+.meter-notes-input:focus {
+  border-color: #555;
+}
+
+.meter-error {
+  color: #f44336;
+  font-size: 0.85rem;
+}
+
+.meter-save-btn {
+  background: #f5a623;
+  color: #12121a;
+  border: none;
+  border-radius: 8px;
+  padding: 0.75rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.meter-save-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.meter-save-btn:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+/* ── Footer ────────────────────────────────────────────────── */
+
+.meter-footer {
+  margin-top: 2rem;
+  text-align: center;
+}
+
+.meter-continue-btn {
+  background: #4caf50;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 1rem 3rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.meter-continue-btn:disabled {
+  background: #333;
+  color: #666;
+  cursor: not-allowed;
+}
+
+.meter-continue-btn:hover:not(:disabled) {
+  opacity: 0.9;
+}

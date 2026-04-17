@@ -1,73 +1,121 @@
-.room-card {
-  background: #1e1e2e;
-  border-radius: 12px;
-  border-left: 4px solid #888;
-  padding: 16px;
-  min-width: 280px;
-}
-
-.room-header {
+.room-card-h {
+  position: relative;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
+  gap: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  padding: 14px 18px;
+  min-width: 200px;
+  max-width: 280px;
+  flex-shrink: 0;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: border-color 0.2s ease, background 0.2s ease;
 }
 
-.room-header h3 {
-  margin: 0;
-  font-size: 1.1rem;
-  color: #e0e0e0;
+.room-card-h:hover {
+  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
 }
 
-.room-power {
-  font-size: 1.3rem;
-  font-weight: 700;
-  color: #f5a623;
+.room-card-accent {
+  width: 3px;
+  height: 36px;
+  border-radius: 2px;
+  flex-shrink: 0;
+  opacity: 0.7;
 }
 
-.room-env {
+.room-card-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.room-card-name {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #f1f5f9;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.room-card-stats {
   display: flex;
+  align-items: center;
   gap: 12px;
-  font-size: 0.85rem;
-  color: #aaa;
-  margin-bottom: 12px;
+  font-size: 0.78rem;
+  color: #64748b;
+  font-variant-numeric: tabular-nums;
 }
 
-.plug-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+.room-card-watts {
+  color: #f59e0b;
+  font-weight: 600;
 }
 
-.plug-row {
+.room-card-plugs {
+  color: #64748b;
+}
+
+.room-card-temp {
+  color: #3b82f6;
+  font-weight: 500;
+}
+
+.room-card-comfort {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 0.9rem;
-  color: #ccc;
-}
-
-.plug-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
   flex-shrink: 0;
 }
 
-.plug-dot.on {
-  background: #4caf50;
-  box-shadow: 0 0 6px #4caf50;
+.comfort-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
 }
 
-.plug-dot.off {
-  background: #555;
+.comfort-cold .comfort-dot {
+  background: #3b82f6;
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.4);
 }
 
-.plug-name {
-  flex: 1;
+.comfort-comfort .comfort-dot {
+  background: #10b981;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
 }
 
-.plug-power {
-  font-variant-numeric: tabular-nums;
-  color: #999;
+.comfort-hot .comfort-dot {
+  background: #ef4444;
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
+}
+
+.comfort-neutral .comfort-dot {
+  background: #475569;
+}
+
+/* Scrollable container (set by parent) */
+.room-scroll {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.08) transparent;
+}
+
+.room-scroll::-webkit-scrollbar {
+  height: 4px;
+}
+
+.room-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.room-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
 }

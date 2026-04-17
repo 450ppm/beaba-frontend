@@ -1,0 +1,105 @@
+.sensor-panel {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  padding: 20px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.sensor-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sensor-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border-left: 3px solid transparent;
+  transition: background 0.2s ease;
+}
+
+.sensor-row:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.sensor-row.sensor-cold {
+  border-left-color: #3b82f6;
+}
+
+.sensor-row.sensor-comfort {
+  border-left-color: #10b981;
+}
+
+.sensor-row.sensor-hot {
+  border-left-color: #ef4444;
+}
+
+.sensor-row.sensor-neutral {
+  border-left-color: #475569;
+}
+
+.sensor-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.sensor-name {
+  font-size: 0.88rem;
+  color: #f1f5f9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sensor-values {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.sensor-temp {
+  font-size: 1.4rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.sensor-temp-cold { color: #3b82f6; }
+.sensor-temp-comfort { color: #10b981; }
+.sensor-temp-hot { color: #ef4444; }
+.sensor-temp-neutral { color: #64748b; }
+
+.sensor-humidity {
+  font-size: 0.85rem;
+  color: #64748b;
+  font-variant-numeric: tabular-nums;
+}
+
+.sensor-battery {
+  color: #64748b;
+  display: inline-flex;
+  align-items: center;
+  position: relative;
+}
+
+.sensor-battery.low {
+  color: #ef4444;
+}
+
+.battery-warn {
+  position: absolute;
+  top: -4px;
+  right: -6px;
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: #ef4444;
+}

@@ -1,0 +1,326 @@
+.landing {
+  min-height: 100vh;
+  background: #0a0a12;
+  color: #e0e0e0;
+}
+
+/* ── Hero ──────────────────────────────────────────── */
+.landing-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 100px 24px 80px;
+  background: radial-gradient(ellipse at 50% 0%, rgba(245, 166, 35, 0.06) 0%, transparent 70%),
+              linear-gradient(180deg, #0a0a12 0%, #10101e 100%);
+}
+
+.landing-hero-logo {
+  height: 160px;
+  margin-bottom: 40px;
+  filter: drop-shadow(0 0 40px rgba(245, 166, 35, 0.15));
+}
+
+.landing-hero-subtitle {
+  max-width: 640px;
+  font-size: 1.15rem;
+  line-height: 1.7;
+  color: #9a9ab0;
+  margin-bottom: 48px;
+  letter-spacing: 0.2px;
+}
+
+.landing-cta {
+  display: inline-block;
+  padding: 16px 44px;
+  background: linear-gradient(135deg, #f5a623, #e8891a);
+  color: #0a0a12;
+  font-size: 1rem;
+  font-weight: 700;
+  border-radius: 50px;
+  text-decoration: none;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  transition: all 0.3s;
+  box-shadow: 0 4px 24px rgba(245, 166, 35, 0.25);
+}
+
+.landing-cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(245, 166, 35, 0.35);
+}
+
+/* ── Sections ──────────────────────────────────────── */
+.landing-section {
+  padding: 80px 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.landing-section-title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #fff;
+  text-align: center;
+  margin-bottom: 12px;
+  letter-spacing: -0.3px;
+}
+
+.landing-section-title::after {
+  content: '';
+  display: block;
+  width: 48px;
+  height: 3px;
+  background: #f5a623;
+  border-radius: 2px;
+  margin: 16px auto 48px;
+}
+
+/* ── Kit Cards — 4 en ligne ────────────────────────── */
+.landing-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+.landing-card {
+  background: linear-gradient(160deg, #14142a 0%, #1a1a2e 100%);
+  border-radius: 16px;
+  padding: 36px 24px 32px;
+  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transition: all 0.3s;
+  position: relative;
+  overflow: hidden;
+}
+
+.landing-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #f5a623, transparent);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.landing-card:hover {
+  border-color: rgba(245, 166, 35, 0.2);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+}
+
+.landing-card:hover::before {
+  opacity: 1;
+}
+
+.landing-card-icon {
+  font-size: 2.8rem;
+  display: block;
+  margin-bottom: 20px;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+}
+
+.landing-card h3 {
+  font-size: 1.05rem;
+  color: #fff;
+  margin-bottom: 12px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+}
+
+.landing-card p {
+  font-size: 0.88rem;
+  color: #8888a0;
+  line-height: 1.6;
+}
+
+/* ── Timeline ──────────────────────────────────────── */
+.landing-timeline {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+  position: relative;
+}
+
+.landing-timeline::before {
+  content: '';
+  position: absolute;
+  top: 22px;
+  left: 12.5%;
+  right: 12.5%;
+  height: 2px;
+  background: linear-gradient(90deg, #f5a623, rgba(245, 166, 35, 0.3));
+  z-index: 0;
+}
+
+.landing-step {
+  text-align: center;
+  position: relative;
+  padding: 0 16px 24px;
+  z-index: 1;
+}
+
+.landing-step-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f5a623, #e8891a);
+  color: #0a0a12;
+  font-size: 1.1rem;
+  font-weight: 800;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 16px rgba(245, 166, 35, 0.3);
+}
+
+.landing-step h3 {
+  font-size: 1rem;
+  color: #fff;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.landing-step p {
+  font-size: 0.85rem;
+  color: #8888a0;
+  line-height: 1.5;
+}
+
+/* ── Project & Partners ────────────────────────────── */
+.landing-project {
+  text-align: center;
+}
+
+.landing-project-text {
+  font-size: 1.05rem;
+  color: #9a9ab0;
+  line-height: 1.8;
+  margin-bottom: 12px;
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.landing-project-text strong {
+  color: #e0e0e0;
+}
+
+.landing-partners-banner {
+  margin-top: 48px;
+  text-align: center;
+}
+
+.landing-partners-banner img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 12px;
+}
+
+/* ── Open source ───────────────────────────────────── */
+.landing-opensource {
+  text-align: center;
+  background: linear-gradient(180deg, transparent, rgba(245, 166, 35, 0.03));
+  border-radius: 24px;
+  padding: 60px 24px;
+}
+
+.landing-opensource-text {
+  font-size: 1.05rem;
+  color: #9a9ab0;
+  margin-bottom: 28px;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 1.7;
+}
+
+.landing-github-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 28px;
+  border: 1px solid rgba(245, 166, 35, 0.4);
+  color: #f5a623;
+  border-radius: 50px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: all 0.3s;
+}
+
+.landing-github-link:hover {
+  background: #f5a623;
+  color: #0a0a12;
+  box-shadow: 0 4px 20px rgba(245, 166, 35, 0.25);
+}
+
+/* ── Footer ────────────────────────────────────────── */
+.landing-footer {
+  text-align: center;
+  padding: 40px 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  color: #555;
+  font-size: 0.85rem;
+}
+
+.landing-footer a {
+  color: #f5a623;
+  text-decoration: none;
+  margin-left: 8px;
+}
+
+.landing-footer a:hover {
+  text-decoration: underline;
+}
+
+/* ── Responsive ────────────────────────────────────── */
+@media (max-width: 900px) {
+  .landing-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .landing-timeline {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+  }
+
+  .landing-timeline::before {
+    display: none;
+  }
+}
+
+@media (max-width: 600px) {
+  .landing-hero {
+    padding: 60px 16px 48px;
+  }
+
+  .landing-hero-logo {
+    height: 100px;
+  }
+
+  .landing-hero-subtitle {
+    font-size: 1rem;
+  }
+
+  .landing-section {
+    padding: 48px 16px;
+  }
+
+  .landing-section-title {
+    font-size: 1.3rem;
+  }
+
+  .landing-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .landing-timeline {
+    grid-template-columns: 1fr;
+  }
+}

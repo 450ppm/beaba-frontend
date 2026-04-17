@@ -42,7 +42,7 @@ export default function ReportPage() {
     );
   }
 
-  const { energy, top_consumers, standby, comfort, recommendations } = report;
+  const { energy, top_consumers, standby, comfort, recommendations, meters } = report;
   const cam = report.campaign;
 
   // Top 3 percentage
@@ -92,6 +92,48 @@ export default function ReportPage() {
           </div>
         </div>
       </section>
+
+      {/* Section 1b — Consommation globale (compteurs) */}
+      {meters && meters.readings && meters.readings.length > 0 && (
+        <section className="report-section">
+          <h2>Consommation globale du foyer</h2>
+          <div className="report-card">
+            <table className="meters-table">
+              <thead>
+                <tr>
+                  <th>Compteur</th>
+                  <th>Debut</th>
+                  <th>Fin</th>
+                  <th>Consommation</th>
+                  <th>Cout estime</th>
+                </tr>
+              </thead>
+              <tbody>
+                {meters.readings.map(m => (
+                  <tr key={m.meter_type}>
+                    <td>{meterLabel(m.meter_type)}</td>
+                    <td>{m.start_value} {m.unit}</td>
+                    <td>{m.end_value} {m.unit}</td>
+                    <td>
+                      {m.consumption} {m.unit}
+                      {m.meter_type === 'gas' && m.consumption_kwh != null && (
+                        <span className="meters-kwh"> ({m.consumption_kwh} kWh)</span>
+                      )}
+                    </td>
+                    <td>{m.estimated_cost.toFixed(2)} EUR</td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td colSpan="4">Total estime</td>
+                  <td>{meters.total_estimated_cost.toFixed(2)} EUR</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </section>
+      )}
 
       {/* Section 2 — Top consommateurs */}
       {top_consumers.length > 0 && (
@@ -251,6 +293,15 @@ export default function ReportPage() {
 
     </div>
   );
+}
+
+function meterLabel(type) {
+  switch (type) {
+    case 'electricity': return 'Electricite (kWh)';
+    case 'gas': return 'Gaz (m\u00B3)';
+    case 'water': return 'Eau (m\u00B3)';
+    default: return type;
+  }
 }
 
 function formatDate(dateStr) {

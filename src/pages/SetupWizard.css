@@ -310,6 +310,100 @@
   border-radius: 12px;
 }
 
+/* ── Tips box ──────────────────────────────────── */
+.tips-box {
+  background: rgba(245, 166, 35, 0.08);
+  border: 1px solid rgba(245, 166, 35, 0.25);
+  border-radius: 12px;
+  padding: 16px 18px;
+  margin-bottom: 20px;
+}
+
+.tips-box-blue {
+  background: rgba(74, 144, 217, 0.08);
+  border-color: rgba(74, 144, 217, 0.25);
+}
+
+.tips-box-blue h4 {
+  color: #4A90D9;
+}
+
+.tips-box-blue h4::before {
+  content: '🌡️';
+}
+
+.tips-box-blue li::before {
+  color: #4A90D9;
+}
+
+.tips-box-orange {
+  background: rgba(245, 166, 35, 0.08);
+  border-color: rgba(245, 166, 35, 0.25);
+}
+
+.tips-box-orange h4::before {
+  content: '🔌';
+}
+
+.tips-box-green {
+  background: rgba(80, 200, 120, 0.08);
+  border-color: rgba(80, 200, 120, 0.25);
+}
+
+.tips-box-green h4 {
+  color: #50C878;
+}
+
+.tips-box-green h4::before {
+  content: '🏠';
+}
+
+.tips-box-green li::before {
+  color: #50C878;
+}
+
+.tips-box h4 {
+  color: #f5a623;
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 0 0 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tips-box h4::before {
+  content: '💡';
+}
+
+.tips-box ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tips-box li {
+  font-size: 0.88rem;
+  color: #ccc;
+  line-height: 1.4;
+  padding-left: 18px;
+  position: relative;
+}
+
+.tips-box li::before {
+  content: '→';
+  position: absolute;
+  left: 0;
+  color: #f5a623;
+}
+
+.tips-box li strong {
+  color: #e0e0e0;
+}
+
 /* ── Misc ───────────────────────────────────────── */
 .empty-hint {
   color: #666;

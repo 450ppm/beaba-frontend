@@ -44,3 +44,46 @@
   color: #64b5f6;
   background: rgba(100, 181, 246, 0.15);
 }
+
+.header-user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header-username {
+  color: #ccc;
+  font-size: 0.9rem;
+}
+
+.header-admin-link {
+  color: #f5a623;
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 4px 10px;
+  border: 1px solid rgba(245, 166, 35, 0.3);
+  border-radius: 6px;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.header-admin-link:hover {
+  background: rgba(245, 166, 35, 0.1);
+  border-color: #f5a623;
+}
+
+.header-logout {
+  background: transparent;
+  border: 1px solid #2a2a3a;
+  color: #a0a0b0;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.header-logout:hover {
+  border-color: #ef5350;
+  color: #ef5350;
+}

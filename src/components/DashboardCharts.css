@@ -1,0 +1,139 @@
+.dc-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.dc-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.dc-title {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: #64748b;
+  margin: 0;
+  font-weight: 600;
+}
+
+.dc-controls {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.dc-chart-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  padding: 20px 16px 12px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: border-color 0.2s ease;
+}
+
+.dc-chart-card:hover {
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+/* Custom tooltip */
+.dc-tooltip {
+  background: rgba(13, 13, 26, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 10px 14px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(12px);
+}
+
+.dc-tooltip-label {
+  color: #64748b;
+  font-size: 0.72rem;
+  margin: 0 0 6px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.dc-tooltip-entry {
+  font-size: 0.82rem;
+  margin: 3px 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dc-tooltip-entry strong {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.dc-tooltip-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* Loading state */
+.dc-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: #475569;
+  font-size: 0.85rem;
+  padding: 48px 0;
+}
+
+.dc-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.06);
+  border-top-color: #f59e0b;
+  border-radius: 50%;
+  animation: dcSpin 0.8s linear infinite;
+}
+
+@keyframes dcSpin {
+  to { transform: rotate(360deg); }
+}
+
+/* Empty state */
+.dc-empty {
+  text-align: center;
+  color: #475569;
+  font-size: 0.85rem;
+  padding: 48px 0;
+}
+
+/* Recharts overrides */
+.dc-section .recharts-legend-item-text {
+  color: #64748b !important;
+  font-size: 0.75rem !important;
+}
+
+.dc-section .recharts-default-legend {
+  padding-top: 8px !important;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .dc-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .dc-controls {
+    width: 100%;
+  }
+
+  .dc-chart-card {
+    padding: 14px 8px 8px;
+  }
+}

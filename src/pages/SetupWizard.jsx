@@ -13,22 +13,23 @@ export default function SetupWizard() {
     <div className="setup-wizard">
       <div className="setup-header">
         <img src="/beaba_banner.png" alt="Beaba" className="setup-logo" />
-        <h1>{campaign?.household_name || 'Configuration'}</h1>
+        <h1>{campaign?.household || 'Configuration'}</h1>
       </div>
       <StepIndicator current={step} />
       <div className="setup-content">
-        {step === 1 && <StepRooms onNext={() => setStep(2)} />}
-        {step === 2 && (
-          <StepTempSensors onNext={() => setStep(3)} onBack={() => setStep(1)} />
-        )}
+        {step === 1 && <StepPreparation onNext={() => setStep(2)} />}
+        {step === 2 && <StepRooms onNext={() => setStep(3)} onBack={() => setStep(1)} />}
         {step === 3 && (
-          <StepPlugs onNext={() => setStep(4)} onBack={() => setStep(2)} />
+          <StepTempSensors onNext={() => setStep(4)} onBack={() => setStep(2)} />
         )}
         {step === 4 && (
+          <StepPlugs onNext={() => setStep(5)} onBack={() => setStep(3)} />
+        )}
+        {step === 5 && (
           <StepSummary
             campaignId={campaign?.id}
             refreshCampaign={refreshCampaign}
-            onBack={() => setStep(3)}
+            onBack={() => setStep(4)}
           />
         )}
       </div>
@@ -36,8 +37,65 @@ export default function SetupWizard() {
   );
 }
 
+/* ── Step 0: Preparation ──────────────────────────────── */
+function StepPreparation({ onNext }) {
+  return (
+    <div className="step-panel">
+      <h2>Preparation de l'installation</h2>
+      <p className="step-desc">
+        Avant de creer les pieces, prenez le temps de parcourir le logement et de reperer les emplacements ideaux pour chaque capteur.
+      </p>
+
+      <div className="tips-box tips-box-blue">
+        <h4>Capteurs de temperature et humidite (SNZB-02P)</h4>
+        <ul>
+          <li>Placez le capteur a environ <strong>1,50 m du sol</strong>, a hauteur de respiration</li>
+          <li>Evitez le <strong>soleil direct</strong> : les rayons faussent la mesure de temperature</li>
+          <li>Eloignez-le des <strong>courants d'air</strong> (fenetre entrouverte, bouche de VMC, porte d'entree)</li>
+          <li>Evitez la proximite d'un <strong>mur exterieur non isole</strong> ou d'une fenetre simple vitrage (surface froide)</li>
+          <li>Ne le placez pas pres d'une <strong>source de chaleur</strong> (radiateur, four, lampe halogene, ordinateur)</li>
+          <li>Privilegiez un <strong>mur interieur</strong>, dans la zone de vie principale de la piece</li>
+          <li>Prevoyez <strong>1 capteur par piece</strong> ou le confort thermique est important (chambres, salon, bureau)</li>
+          <li>La salle de bain est interessante pour <strong>detecter les problemes d'humidite</strong></li>
+        </ul>
+      </div>
+
+      <div className="tips-box tips-box-orange">
+        <h4>Prises connectees (Innr SP 240)</h4>
+        <ul>
+          <li>La prise se branche <strong>entre la prise murale et l'appareil</strong> a mesurer</li>
+          <li>Ciblez en priorite les <strong>gros consommateurs</strong> : chauffage d'appoint, chauffe-eau, seche-linge, four, lave-vaisselle</li>
+          <li>Pensez aux appareils en <strong>veille permanente</strong> : TV, box internet, console de jeux, ecran PC</li>
+          <li>Ne depassez pas <strong>3680W (16A)</strong> par prise — verifiez la puissance de l'appareil</li>
+          <li>Evitez les <strong>multiprises en cascade</strong> : branchez la prise connectee directement sur la prise murale</li>
+          <li>Vous pouvez mesurer une <strong>multiprise entiere</strong> pour estimer la consommation d'un poste (ex: bureau informatique)</li>
+          <li>Pensez au <strong>refrigerateur et congelateur</strong> : ce sont souvent les 1ers consommateurs du foyer</li>
+          <li>Le <strong>chauffe-eau electrique</strong> est generalement le plus gros poste — mesurez-le si accessible</li>
+        </ul>
+      </div>
+
+      <div className="tips-box tips-box-green">
+        <h4>Organisation des pieces</h4>
+        <ul>
+          <li>Notez les pieces ou vous allez installer des capteurs et/ou des prises</li>
+          <li>Donnez des <strong>noms clairs</strong> aux pieces (ex: "Chambre parents", pas "Chambre 1")</li>
+          <li>Les <strong>couleurs</strong> vous aideront a identifier rapidement chaque piece dans le rapport</li>
+          <li>Pas besoin de creer une piece pour chaque capteur — regroupez si logique (ex: cuisine ouverte sur salon)</li>
+        </ul>
+      </div>
+
+      <div className="step-nav">
+        <div />
+        <button className="btn-primary" onClick={onNext}>
+          C'est compris, creer les pieces
+        </button>
+      </div>
+    </div>
+  );
+}
+
 /* ── Step 1: Rooms ─────────────────────────────────────── */
-function StepRooms({ onNext }) {
+function StepRooms({ onNext, onBack }) {
   const [rooms, setRooms] = useState([]);
   const [name, setName] = useState('');
   const [color, setColor] = useState('#4A90D9');
@@ -113,7 +171,7 @@ function StepRooms({ onNext }) {
       </form>
 
       <div className="step-nav">
-        <div />
+        <button className="btn-back" onClick={onBack}>Retour</button>
         <button className="btn-primary" onClick={onNext} disabled={rooms.length === 0}>
           Suivant
         </button>
@@ -188,7 +246,7 @@ function StepTempSensors({ onNext, onBack }) {
     <div className="step-panel">
       <h2>Capteurs de temperature</h2>
       <p className="step-desc">
-        Associez chaque capteur SNZB-02P a une piece.
+        Associez chaque capteur SNZB-02P a une piece. Utilisez le commentaire pour noter l'emplacement exact.
       </p>
 
       <button
@@ -333,7 +391,7 @@ function StepPlugs({ onNext, onBack }) {
     <div className="step-panel">
       <h2>Prises connectees</h2>
       <p className="step-desc">
-        Associez chaque prise Innr SP 240 a une piece et un appareil.
+        Associez chaque prise Innr SP 240 a une piece et nommez l'appareil mesure.
       </p>
 
       <button

@@ -255,6 +255,44 @@
   margin-top: 4px;
 }
 
+/* ── Section 1b: Meters table ──────────────────────────────────────── */
+
+.meters-table {
+  width: 100%;
+  border-collapse: collapse;
+  color: #ccc;
+  font-size: 0.9rem;
+}
+
+.meters-table th {
+  text-align: left;
+  padding: 10px 12px;
+  border-bottom: 2px solid #333;
+  color: #888;
+  font-weight: 600;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.meters-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #2a2a3c;
+}
+
+.meters-table tfoot td {
+  font-weight: 700;
+  color: #f5a623;
+  border-top: 2px solid #333;
+  border-bottom: none;
+  padding-top: 12px;
+}
+
+.meters-kwh {
+  color: #888;
+  font-size: 0.85em;
+}
+
 /* ── Section 6: Recommandations ─────────────────────────────────────── */
 
 .recommendations-list {
@@ -360,8 +398,18 @@
 
   .standby-table,
   .standby-table td,
+  .meters-table,
+  .meters-table td,
   .recommendation-card p {
     color: #000 !important;
+  }
+
+  .meters-table th {
+    color: #555 !important;
+  }
+
+  .meters-table tfoot td {
+    color: #333 !important;
   }
 
   .standby-table tfoot td {

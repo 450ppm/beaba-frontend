@@ -1,0 +1,100 @@
+.appliance-panel {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  padding: 20px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.panel-title {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: #64748b;
+  margin: 0 0 16px;
+  font-weight: 600;
+}
+
+.panel-empty {
+  color: #475569;
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
+.appliance-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.appliance-row {
+  display: grid;
+  grid-template-columns: 14px 1fr auto 60px;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  transition: background 0.2s ease;
+}
+
+.appliance-row:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.appliance-row.top-consumer {
+  background: rgba(245, 158, 11, 0.06);
+  box-shadow: inset 0 0 20px rgba(245, 158, 11, 0.04);
+}
+
+.appliance-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.appliance-dot.on {
+  background: #10b981;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+}
+
+.appliance-dot.off {
+  background: #334155;
+}
+
+.appliance-name {
+  font-size: 0.88rem;
+  color: #f1f5f9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.appliance-power {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #f1f5f9;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.appliance-power small {
+  font-weight: 400;
+  color: #64748b;
+  font-size: 0.75rem;
+}
+
+.appliance-bar-track {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.appliance-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.5s ease;
+}
