@@ -1,7 +1,12 @@
 .landing {
   min-height: 100vh;
-  background: #0a0a12;
   color: #e0e0e0;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(245, 166, 35, 0.05) 0%, transparent 40%),
+    radial-gradient(ellipse at 20% 20%, rgba(74, 122, 200, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 70%, rgba(123, 104, 238, 0.06) 0%, transparent 55%),
+    linear-gradient(180deg, #0a0e1c 0%, #0d1128 40%, #10152e 70%, #0a0e1c 100%);
+  background-attachment: fixed;
 }
 
 /* ── Hero ──────────────────────────────────────────── */
@@ -12,8 +17,7 @@
   justify-content: center;
   text-align: center;
   padding: 100px 24px 80px;
-  background: radial-gradient(ellipse at 50% 0%, rgba(245, 166, 35, 0.06) 0%, transparent 70%),
-              linear-gradient(180deg, #0a0a12 0%, #10101e 100%);
+  background: transparent;
 }
 
 .landing-hero-logo {
@@ -85,11 +89,13 @@
 }
 
 .landing-card {
-  background: linear-gradient(160deg, #14142a 0%, #1a1a2e 100%);
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border-radius: 16px;
   padding: 36px 24px 32px;
   text-align: center;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   transition: all 0.3s;
   position: relative;
   overflow: hidden;
@@ -225,8 +231,6 @@
 /* ── Open source ───────────────────────────────────── */
 .landing-opensource {
   text-align: center;
-  background: linear-gradient(180deg, transparent, rgba(245, 166, 35, 0.03));
-  border-radius: 24px;
   padding: 60px 24px;
 }
 
