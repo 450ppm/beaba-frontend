@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { CampaignProvider, useCampaign } from './context/CampaignContext';
 import Header from './components/Header';
@@ -10,6 +10,7 @@ import NewCampaignPage from './pages/NewCampaignPage';
 import SetupWizard from './pages/SetupWizard';
 import Dashboard from './pages/Dashboard';
 import ReportPage from './pages/ReportPage';
+import ReportPrintPage from './pages/ReportPrintPage';
 import MeterReadingsPage from './pages/MeterReadingsPage';
 import api from './api';
 
@@ -137,9 +138,12 @@ function AppContent() {
 }
 
 function ProtectedApp() {
+  const location = useLocation();
+  const isPrintReport = location.pathname === '/app/report/print';
+
   return (
     <CampaignProvider>
-      <AppContent />
+      {isPrintReport ? <ReportPrintPage /> : <AppContent />}
     </CampaignProvider>
   );
 }

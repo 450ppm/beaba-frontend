@@ -1,0 +1,503 @@
+/* ═══════════════════════════════════════════════════════════
+   Beaba — Print report (A4 PDF)
+   Sober, professional, for printing
+   ═══════════════════════════════════════════════════════════ */
+
+@page {
+  size: A4;
+  margin: 18mm 16mm;
+}
+
+@page :first {
+  margin: 0;
+}
+
+.pr-root {
+  background: #f2f2f2;
+  min-height: 100vh;
+  padding: 32px 0;
+  font-family: Georgia, 'Times New Roman', serif;
+  color: #111;
+}
+
+.pr-loading {
+  text-align: center;
+  padding: 80px 20px;
+  color: #333;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Screen preview chrome — hidden on print */
+.pr-chrome {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: #0d0d1a;
+  color: #fff;
+  padding: 10px 0;
+  margin-bottom: 24px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.pr-chrome-inner {
+  max-width: 210mm;
+  margin: 0 auto;
+  padding: 0 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.pr-chrome-title {
+  font-size: 0.9rem;
+  color: #ddd;
+}
+
+.pr-chrome-btn {
+  background: #f59e0b;
+  color: #0d0d1a;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+/* ── A4 pages ──────────────────────────────────────────────── */
+.pr-page {
+  width: 210mm;
+  min-height: 297mm;
+  margin: 0 auto 16px;
+  background: #fff;
+  padding: 20mm 18mm;
+  box-shadow: 0 2px 18px rgba(0, 0, 0, 0.12);
+  box-sizing: border-box;
+  position: relative;
+  page-break-after: always;
+  display: flex;
+  flex-direction: column;
+}
+
+.pr-page:last-child {
+  page-break-after: auto;
+}
+
+/* ── Page header / footer (running) ────────────────────────── */
+.pr-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 8px;
+  margin-bottom: 18px;
+  border-bottom: 0.5pt solid #bbb;
+  font-size: 9pt;
+  color: #555;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.pr-ph-left { font-weight: 600; color: #333; }
+.pr-ph-right { }
+
+.pr-page-footer {
+  position: absolute;
+  bottom: 10mm;
+  left: 18mm;
+  right: 18mm;
+  display: flex;
+  justify-content: space-between;
+  font-size: 8pt;
+  color: #888;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  padding-top: 6px;
+  border-top: 0.5pt solid #ddd;
+}
+
+/* ── Cover page ────────────────────────────────────────────── */
+.pr-cover {
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 297mm;
+}
+
+.pr-cover-top {
+  padding: 18mm 18mm 0;
+}
+
+.pr-cover-logo {
+  height: 48px;
+}
+
+.pr-cover-center {
+  padding: 0 18mm;
+  margin-top: 40mm;
+}
+
+.pr-cover-eyebrow {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 3pt;
+  font-size: 9pt;
+  color: #f59e0b;
+  font-weight: 600;
+  margin-bottom: 14pt;
+}
+
+.pr-cover-household {
+  font-family: Georgia, serif;
+  font-size: 32pt;
+  font-weight: 700;
+  color: #111;
+  margin: 0 0 8pt;
+  letter-spacing: -0.5pt;
+  line-height: 1.1;
+}
+
+.pr-cover-address {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 11pt;
+  color: #555;
+  margin-bottom: 24pt;
+}
+
+.pr-cover-dates {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  border-top: 1pt solid #222;
+  border-bottom: 1pt solid #222;
+  padding: 10pt 0;
+  display: flex;
+  gap: 32pt;
+  font-size: 10pt;
+  color: #222;
+  margin-top: 20pt;
+}
+
+.pr-lbl {
+  text-transform: uppercase;
+  font-size: 7.5pt;
+  letter-spacing: 1pt;
+  color: #888;
+  margin-right: 6pt;
+}
+
+.pr-cover-bottom {
+  padding: 18mm;
+}
+
+.pr-signatures {
+  display: flex;
+  gap: 40pt;
+  margin-bottom: 28pt;
+}
+
+.pr-sig {
+  flex: 1;
+}
+
+.pr-sig-line {
+  border-bottom: 0.7pt solid #222;
+  height: 30pt;
+}
+
+.pr-sig-label {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 8.5pt;
+  color: #555;
+  margin-top: 4pt;
+  text-transform: uppercase;
+  letter-spacing: 0.5pt;
+}
+
+.pr-cover-meta {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 8.5pt;
+  color: #888;
+  text-align: center;
+  padding-top: 12pt;
+  border-top: 0.5pt solid #ddd;
+}
+
+/* ── Typography ────────────────────────────────────────────── */
+.pr-h1 {
+  font-family: Georgia, serif;
+  font-size: 18pt;
+  font-weight: 700;
+  color: #111;
+  margin: 0 0 14pt;
+  padding-bottom: 6pt;
+  border-bottom: 2pt solid #f59e0b;
+  letter-spacing: -0.3pt;
+}
+
+.pr-h2 {
+  font-family: Georgia, serif;
+  font-size: 12pt;
+  font-weight: 700;
+  color: #111;
+  margin: 18pt 0 8pt;
+  letter-spacing: -0.2pt;
+}
+
+.pr-note {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 9.5pt;
+  color: #555;
+  font-style: italic;
+  margin: 6pt 0 10pt;
+  line-height: 1.45;
+}
+
+/* ── Synthese summary box ──────────────────────────────────── */
+.pr-summary-box {
+  border: 0.7pt solid #222;
+  padding: 14pt 16pt;
+  margin-bottom: 8pt;
+  page-break-inside: avoid;
+}
+
+.pr-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14pt;
+}
+
+.pr-summary-lbl {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 8pt;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.6pt;
+  margin-bottom: 4pt;
+}
+
+.pr-summary-val {
+  font-family: Georgia, serif;
+  font-size: 18pt;
+  font-weight: 700;
+  color: #111;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.pr-summary-val span {
+  font-size: 10pt;
+  color: #777;
+  font-weight: 400;
+  margin-left: 3pt;
+}
+
+.pr-summary-val.accent {
+  color: #f59e0b;
+}
+
+/* ── Tables ────────────────────────────────────────────────── */
+.pr-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 9.5pt;
+  margin-bottom: 10pt;
+  page-break-inside: avoid;
+}
+
+.pr-table th,
+.pr-table td {
+  padding: 6pt 8pt;
+  text-align: left;
+  border-bottom: 0.4pt solid #ccc;
+  vertical-align: top;
+}
+
+.pr-table th {
+  font-size: 8pt;
+  text-transform: uppercase;
+  letter-spacing: 0.5pt;
+  color: #333;
+  font-weight: 700;
+  border-bottom: 0.8pt solid #222;
+  border-top: 0.8pt solid #222;
+  background: #fafafa;
+}
+
+.pr-table td.ar,
+.pr-table th.ar {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.pr-table tfoot td {
+  font-weight: 700;
+  border-top: 0.8pt solid #222;
+  border-bottom: 0.8pt solid #222;
+  padding-top: 8pt;
+  padding-bottom: 8pt;
+  background: #fafafa;
+}
+
+.pr-table .accent { color: #f59e0b; }
+
+/* ── Top 3 list ───────────────────────────────────────────── */
+.pr-top3-list {
+  list-style: decimal inside;
+  padding: 0;
+  margin: 6pt 0 10pt;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 10pt;
+}
+
+.pr-top3-list li {
+  padding: 5pt 8pt;
+  border-bottom: 0.4pt solid #e5e5e5;
+  display: flex;
+  align-items: baseline;
+  gap: 10pt;
+}
+
+.pr-top3-list li:last-child { border-bottom: none; }
+
+.pr-top3-name {
+  font-weight: 600;
+  color: #111;
+  flex: 1;
+}
+
+.pr-top3-room {
+  color: #777;
+  font-size: 9pt;
+  flex: 1;
+}
+
+.pr-top3-val {
+  color: #f59e0b;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Charts ───────────────────────────────────────────────── */
+.pr-chart {
+  margin: 8pt 0 12pt;
+  page-break-inside: avoid;
+}
+
+/* ── Comfort charts grid ──────────────────────────────────── */
+.pr-comfort-charts {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10pt;
+  page-break-inside: avoid;
+}
+
+.pr-comfort-chart {
+  border: 0.5pt solid #ccc;
+  padding: 6pt 8pt 8pt;
+}
+
+.pr-comfort-chart-title {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 9pt;
+  font-weight: 600;
+  color: #111;
+  margin-bottom: 4pt;
+}
+
+/* ── Recommendations ──────────────────────────────────────── */
+.pr-reco {
+  padding-left: 18pt;
+  margin: 8pt 0 16pt;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 10.5pt;
+  line-height: 1.55;
+}
+
+.pr-reco li {
+  margin-bottom: 10pt;
+  color: #222;
+  padding-left: 6pt;
+}
+
+.pr-reco li::marker {
+  color: #f59e0b;
+  font-weight: 700;
+}
+
+/* ── Partners / footer section ────────────────────────────── */
+.pr-partners {
+  margin-top: auto;
+  padding-top: 18pt;
+  border-top: 0.5pt solid #ccc;
+  text-align: center;
+}
+
+.pr-partners-text {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 9pt;
+  color: #555;
+  line-height: 1.55;
+  max-width: 140mm;
+  margin: 0 auto 12pt;
+}
+
+.pr-partners-img {
+  max-width: 140mm;
+  height: auto;
+  margin: 6pt auto;
+  display: block;
+}
+
+.pr-copy {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 8pt;
+  color: #999;
+  margin-top: 10pt;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Print styles
+   ═══════════════════════════════════════════════════════════ */
+@media print {
+  body {
+    background: #fff !important;
+    margin: 0 !important;
+  }
+
+  .pr-root {
+    background: #fff;
+    padding: 0;
+  }
+
+  .no-print,
+  .pr-chrome {
+    display: none !important;
+  }
+
+  .pr-page {
+    margin: 0;
+    box-shadow: none;
+    page-break-after: always;
+    padding: 0;
+    width: auto;
+    min-height: auto;
+  }
+
+  .pr-page:last-child {
+    page-break-after: auto;
+  }
+
+  .pr-cover {
+    padding: 0;
+    min-height: auto;
+  }
+
+  .pr-page-footer {
+    position: fixed;
+    bottom: 6mm;
+  }
+
+  *, *::before, *::after {
+    print-color-adjust: exact !important;
+    -webkit-print-color-adjust: exact !important;
+  }
+}
