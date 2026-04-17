@@ -11,8 +11,9 @@ export default function LandingPage() {
       <section className="landing-hero">
         <img src="/beaba_banner.png" alt="Beaba" className="landing-hero-logo" />
         <p className="landing-hero-subtitle">
-          Rendre visible et comprehensible la consommation d'electricite, de gaz
-          et d'eau des logements pour encourager le changement de comportement.
+          Repenser le confort et rendre visible la consommation d'electricite,
+          de gaz et d'eau des logements pour encourager un changement durable
+          des comportements.
         </p>
         <div className="landing-cta-row">
           <Link to="/login" className="landing-cta">Acces conseiller</Link>
