@@ -75,6 +75,7 @@ export default function DashboardCharts() {
   const [powerRealtime, setPowerRealtime] = useState([]);
   const [powerDaily, setPowerDaily] = useState([]);
   const [tempHistory, setTempHistory] = useState([]);
+  const [co2History, setCo2History] = useState([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -100,14 +101,19 @@ export default function DashboardCharts() {
           }
         } else {
           const interval = period === '24h' ? 'hour' : 'day';
-          const res = await api.get('/api/readings/temp/history', {
-            params: {
-              interval,
-              from: isoFrom(period),
-              to: new Date().toISOString(),
-            },
-          });
-          if (!cancelled) setTempHistory(res.data);
+          const params = {
+            interval,
+            from: isoFrom(period),
+            to: new Date().toISOString(),
+          };
+          const [tempRes, co2Res] = await Promise.all([
+            api.get('/api/readings/temp/history', { params }),
+            api.get('/api/readings/co2/history', { params }).catch(() => ({ data: [] })),
+          ]);
+          if (!cancelled) {
+            setTempHistory(tempRes.data);
+            setCo2History(co2Res.data);
+          }
         }
       } catch (err) {
         console.error('Chart data fetch error:', err);
@@ -201,6 +207,29 @@ export default function DashboardCharts() {
     const series = Object.values(byTs).sort((a, b) => a.ts.localeCompare(b.ts));
     return { series, sensors };
   }, [tempHistory, period]);
+
+  // --- CO2 series ---
+  const co2Data = useMemo(() => {
+    if (!co2History.length) return { series: [], sensors: [] };
+
+    const sensorSet = new Map();
+    co2History.forEach((r) => {
+      const label = r.room_name || r.sensor_name || r.sensor_id;
+      sensorSet.set(r.sensor_id, label);
+    });
+    const sensors = Array.from(sensorSet.entries()).map(([id, name]) => ({ id, name }));
+
+    const byTs = {};
+    co2History.forEach((r) => {
+      const label = sensorSet.get(r.sensor_id);
+      const timeLabel = period === '24h' ? formatHour(r.ts) : formatDate(r.ts);
+      if (!byTs[r.ts]) byTs[r.ts] = { ts: r.ts, time: timeLabel };
+      byTs[r.ts][label] = r.co2_ppm;
+    });
+
+    const series = Object.values(byTs).sort((a, b) => a.ts.localeCompare(b.ts));
+    return { series, sensors };
+  }, [co2History, period]);
 
   const renderPowerCharts = () => {
     if (period === '24h') {
@@ -338,63 +367,74 @@ export default function DashboardCharts() {
 
   const renderComfortCharts = () => {
     const { series, sensors } = comfortData;
+    const { series: co2Series, sensors: co2Sensors } = co2Data;
 
     return (
-      <div className="dc-chart-card dc-chart-main">
-        <ResponsiveContainer width="100%" height={400}>
-          <LineChart data={series} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} vertical={false} />
-            <XAxis
-              dataKey="time"
-              tick={AXIS_STYLE}
-              stroke="transparent"
-              tickLine={false}
-              axisLine={false}
-            />
-            <YAxis
-              tick={AXIS_STYLE}
-              stroke="transparent"
-              tickLine={false}
-              axisLine={false}
-              unit={'\u00b0C'}
-              domain={['auto', 'auto']}
-              width={50}
-            />
-            <Tooltip content={<CustomTooltip unit={'\u00b0C'} />} />
-            <Legend
-              wrapperStyle={{ color: '#64748b', fontSize: 11, paddingTop: 8 }}
-              iconType="circle"
-              iconSize={8}
-            />
-            <ReferenceArea
-              y1={19}
-              y2={24}
-              fill="#10b981"
-              fillOpacity={0.06}
-              label={{
-                value: 'Zone de confort',
-                fill: '#10b981',
-                fontSize: 10,
-                position: 'insideTopLeft',
-                opacity: 0.6,
-              }}
-            />
-            {sensors.map((s, i) => (
-              <Line
-                key={s.id}
-                type="monotone"
-                dataKey={`temp_${s.name}`}
-                stroke={SENSOR_COLORS[i % SENSOR_COLORS.length]}
-                strokeWidth={2}
-                dot={false}
-                activeDot={{ r: 3, strokeWidth: 0 }}
-                animationDuration={600}
-                name={s.name}
+      <>
+        <div className="dc-chart-card dc-chart-main">
+          <div className="dc-subchart-title">Temperature</div>
+          <ResponsiveContainer width="100%" height={350}>
+            <LineChart data={series} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} vertical={false} />
+              <XAxis dataKey="time" tick={AXIS_STYLE} stroke="transparent" tickLine={false} axisLine={false} />
+              <YAxis tick={AXIS_STYLE} stroke="transparent" tickLine={false} axisLine={false} unit={'\u00b0C'} domain={['auto', 'auto']} width={50} />
+              <Tooltip content={<CustomTooltip unit={'\u00b0C'} />} />
+              <Legend wrapperStyle={{ color: '#64748b', fontSize: 11, paddingTop: 8 }} iconType="circle" iconSize={8} />
+              <ReferenceArea
+                y1={19}
+                y2={24}
+                fill="#10b981"
+                fillOpacity={0.06}
+                label={{ value: 'Zone de confort', fill: '#10b981', fontSize: 10, position: 'insideTopLeft', opacity: 0.6 }}
               />
-            ))}
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
+              {sensors.map((s, i) => (
+                <Line
+                  key={s.id}
+                  type="monotone"
+                  dataKey={`temp_${s.name}`}
+                  stroke={SENSOR_COLORS[i % SENSOR_COLORS.length]}
+                  strokeWidth={2}
+                  dot={false}
+                  activeDot={{ r: 3, strokeWidth: 0 }}
+                  animationDuration={600}
+                  name={s.name}
+                />
+              ))}
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+
+        {co2Sensors.length > 0 && (
+          <div className="dc-chart-card dc-chart-main">
+            <div className="dc-subchart-title">Qualite de l'air (CO2)</div>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={co2Series} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} vertical={false} />
+                <XAxis dataKey="time" tick={AXIS_STYLE} stroke="transparent" tickLine={false} axisLine={false} />
+                <YAxis tick={AXIS_STYLE} stroke="transparent" tickLine={false} axisLine={false} unit=" ppm" domain={['auto', 'auto']} width={60} />
+                <Tooltip content={<CustomTooltip unit="ppm" />} />
+                <Legend wrapperStyle={{ color: '#64748b', fontSize: 11, paddingTop: 8 }} iconType="circle" iconSize={8} />
+                <ReferenceArea y1={0} y2={800} fill="#10b981" fillOpacity={0.06} label={{ value: 'Air sain', fill: '#10b981', fontSize: 10, position: 'insideTopLeft', opacity: 0.6 }} />
+                <ReferenceArea y1={800} y2={1200} fill="#f59e0b" fillOpacity={0.06} />
+                <ReferenceArea y1={1200} y2={5000} fill="#ef4444" fillOpacity={0.05} label={{ value: 'A aerer', fill: '#ef4444', fontSize: 10, position: 'insideTopLeft', opacity: 0.7 }} />
+                {co2Sensors.map((s, i) => (
+                  <Line
+                    key={s.id}
+                    type="monotone"
+                    dataKey={s.name}
+                    stroke={SENSOR_COLORS[i % SENSOR_COLORS.length]}
+                    strokeWidth={2}
+                    dot={false}
+                    activeDot={{ r: 3, strokeWidth: 0 }}
+                    animationDuration={600}
+                    name={s.name}
+                  />
+                ))}
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+      </>
     );
   };
 
