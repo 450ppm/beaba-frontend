@@ -24,6 +24,11 @@ export default function Dashboard({ onRequestEndMeters }) {
     30000
   );
 
+  const { data: co2Data } = usePolling(
+    useCallback(() => api.get('/api/readings/co2'), []),
+    30000
+  );
+
   const { data: powerData } = usePolling(
     useCallback(() => api.get('/api/readings/power'), []),
     10000
@@ -126,7 +131,7 @@ export default function Dashboard({ onRequestEndMeters }) {
         </div>
         <div className="db-main-right">
           <ApplianceList powerData={powerData} />
-          <SensorList tempData={tempData} />
+          <SensorList tempData={tempData} co2Data={co2Data} />
         </div>
       </div>
 

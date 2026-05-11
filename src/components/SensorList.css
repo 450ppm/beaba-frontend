@@ -103,3 +103,39 @@
   font-weight: 700;
   color: #ef4444;
 }
+
+/* ── CO2 row ─────────────────────────────────────── */
+.sensor-row.sensor-co2 {
+  border-left-color: #a78bfa;
+}
+
+.sensor-co2-label {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #a78bfa;
+  background: rgba(167, 139, 250, 0.12);
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-right: 8px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.sensor-co2-value small {
+  font-size: 0.65rem;
+  color: #64748b;
+  font-weight: 400;
+  margin-left: 2px;
+}
+
+.sensor-co2-comfort  { color: #10b981 !important; }
+.sensor-co2-warning  { color: #f59e0b !important; }
+.sensor-co2-bad      { color: #ef4444 !important; }
+
+.sensor-row.sensor-warning {
+  border-left-color: #f59e0b;
+}
+.sensor-row.sensor-bad {
+  border-left-color: #ef4444;
+}
