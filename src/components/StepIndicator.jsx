@@ -1,6 +1,6 @@
 import './StepIndicator.css';
 
-const STEPS = ['Preparation', 'Pieces', 'Capteurs', 'Prises', 'Resume'];
+const STEPS = ['Preparation', 'Pieces', 'Temp', 'CO2', 'Prises', 'Resume'];
 
 export default function StepIndicator({ current }) {
   return (

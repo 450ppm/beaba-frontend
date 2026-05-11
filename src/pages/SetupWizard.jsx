@@ -23,13 +23,16 @@ export default function SetupWizard() {
           <StepTempSensors onNext={() => setStep(4)} onBack={() => setStep(2)} />
         )}
         {step === 4 && (
-          <StepPlugs onNext={() => setStep(5)} onBack={() => setStep(3)} />
+          <StepCo2Sensors onNext={() => setStep(5)} onBack={() => setStep(3)} />
         )}
         {step === 5 && (
+          <StepPlugs onNext={() => setStep(6)} onBack={() => setStep(4)} />
+        )}
+        {step === 6 && (
           <StepSummary
             campaignId={campaign?.id}
             refreshCampaign={refreshCampaign}
-            onBack={() => setStep(4)}
+            onBack={() => setStep(5)}
           />
         )}
       </div>
@@ -323,6 +326,150 @@ function StepTempSensors({ onNext, onBack }) {
   );
 }
 
+/* ── Step CO2 sensors ──────────────────────────────────── */
+function StepCo2Sensors({ onNext, onBack }) {
+  const [zigbeeDevices, setZigbeeDevices] = useState([]);
+  const [rooms, setRooms] = useState([]);
+  const [assigned, setAssigned] = useState([]);
+  const [selections, setSelections] = useState({});
+  const [comments, setComments] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fetchAll = useCallback(async () => {
+    try {
+      const [devRes, roomRes, sensorRes] = await Promise.all([
+        api.get('/api/zigbee/devices'),
+        api.get('/api/rooms'),
+        api.get('/api/sensors/co2'),
+      ]);
+      // Filtre les capteurs CO2 connus (Heiman HS3AQ, Aqara, etc.)
+      const devices = devRes.data.filter((d) => {
+        const model = (d.model_id || d.definition?.model || '').toUpperCase();
+        const exposes = d.definition?.exposes || [];
+        const hasCo2 = exposes.some((e) => e.name === 'co2' || e.property === 'co2');
+        return hasCo2 || model.includes('HS3AQ') || model.includes('CO2');
+      });
+      setZigbeeDevices(devices);
+      setRooms(roomRes.data);
+      setAssigned(sensorRes.data);
+    } catch { /* empty */ }
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { fetchAll(); }, [fetchAll]);
+
+  const refreshDevices = async () => {
+    setRefreshing(true);
+    try {
+      await api.post('/api/zigbee/devices/refresh');
+      await new Promise((r) => setTimeout(r, 3000));
+      await fetchAll();
+    } catch { /* empty */ }
+    setRefreshing(false);
+  };
+
+  const assignSensor = async (device) => {
+    const roomId = selections[device.ieee_address];
+    if (!roomId) return;
+    try {
+      await api.post('/api/sensors/co2', {
+        id: device.ieee_address,
+        friendly_name: device.friendly_name,
+        name: device.friendly_name,
+        room_id: roomId,
+        comment: comments[device.ieee_address] || '',
+      });
+      await fetchAll();
+    } catch { /* empty */ }
+  };
+
+  const assignedIds = new Set(assigned.map((s) => s.id));
+  const unassigned = zigbeeDevices.filter((d) => !assignedIds.has(d.ieee_address));
+
+  if (loading) return <div className="setup-loading">Chargement...</div>;
+
+  return (
+    <div className="step-panel">
+      <h2>Capteurs CO2</h2>
+      <p className="step-desc">
+        Associez chaque capteur CO2 a une piece. Cette etape est facultative — passez a la suivante si vous n'avez pas de capteur CO2.
+      </p>
+
+      <button
+        type="button"
+        className="btn-secondary btn-refresh"
+        onClick={refreshDevices}
+        disabled={refreshing}
+      >
+        {refreshing ? 'Recherche...' : 'Rechercher les appareils'}
+      </button>
+
+      {assigned.length > 0 && (
+        <div className="assigned-section">
+          <h3>Capteurs CO2 assignes</h3>
+          {assigned.map((s) => (
+            <div key={s.id} className="assigned-item">
+              <span className="assigned-name">{s.friendly_name || s.name}</span>
+              <span className="assigned-room">
+                {rooms.find((r) => r.id === s.room_id)?.name || '—'}
+              </span>
+              {s.comment && <span className="assigned-comment">{s.comment}</span>}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {unassigned.length > 0 && (
+        <div className="unassigned-section">
+          <h3>Capteurs CO2 disponibles</h3>
+          {unassigned.map((d) => (
+            <div key={d.ieee_address} className="device-assign-card">
+              <div className="device-name">{d.friendly_name}</div>
+              <select
+                value={selections[d.ieee_address] || ''}
+                onChange={(e) =>
+                  setSelections((s) => ({ ...s, [d.ieee_address]: e.target.value }))
+                }
+              >
+                <option value="">-- Piece --</option>
+                {rooms.map((r) => (
+                  <option key={r.id} value={r.id}>{r.name}</option>
+                ))}
+              </select>
+              <input
+                type="text"
+                placeholder="Commentaire (ex: piece de vie principale)"
+                value={comments[d.ieee_address] || ''}
+                onChange={(e) =>
+                  setComments((c) => ({ ...c, [d.ieee_address]: e.target.value }))
+                }
+              />
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={() => assignSensor(d)}
+                disabled={!selections[d.ieee_address]}
+              >
+                Assigner
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {unassigned.length === 0 && zigbeeDevices.length === 0 && (
+        <p className="empty-hint">Aucun capteur CO2 detecte. Vous pouvez passer cette etape.</p>
+      )}
+
+      <div className="step-nav">
+        <button className="btn-back" onClick={onBack}>Retour</button>
+        <button className="btn-primary" onClick={onNext}>Suivant</button>
+      </div>
+    </div>
+  );
+}
+
 /* ── Step 3: Plugs ─────────────────────────────────────── */
 function StepPlugs({ onNext, onBack }) {
   const [zigbeeDevices, setZigbeeDevices] = useState([]);
@@ -471,6 +618,7 @@ function StepPlugs({ onNext, onBack }) {
 function StepSummary({ campaignId, refreshCampaign, onBack }) {
   const [rooms, setRooms] = useState([]);
   const [sensors, setSensors] = useState([]);
+  const [co2Sensors, setCo2Sensors] = useState([]);
   const [plugs, setPlugs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activating, setActivating] = useState(false);
@@ -478,13 +626,15 @@ function StepSummary({ campaignId, refreshCampaign, onBack }) {
   useEffect(() => {
     (async () => {
       try {
-        const [roomRes, sensorRes, plugRes] = await Promise.all([
+        const [roomRes, sensorRes, co2Res, plugRes] = await Promise.all([
           api.get('/api/rooms'),
           api.get('/api/sensors/temp'),
+          api.get('/api/sensors/co2'),
           api.get('/api/plugs'),
         ]);
         setRooms(roomRes.data);
         setSensors(sensorRes.data);
+        setCo2Sensors(co2Res.data);
         setPlugs(plugRes.data);
       } catch { /* empty */ }
       setLoading(false);
@@ -512,6 +662,7 @@ function StepSummary({ campaignId, refreshCampaign, onBack }) {
       <div className="summary-rooms">
         {rooms.map((room) => {
           const roomSensors = sensors.filter((s) => s.room_id === room.id);
+          const roomCo2 = co2Sensors.filter((s) => s.room_id === room.id);
           const roomPlugs = plugs.filter((p) => p.room_id === room.id);
           return (
             <div key={room.id} className="summary-room-card">
@@ -521,8 +672,19 @@ function StepSummary({ campaignId, refreshCampaign, onBack }) {
               </div>
               {roomSensors.length > 0 && (
                 <div className="summary-devices">
-                  <span className="summary-device-label">Capteurs:</span>
+                  <span className="summary-device-label">Temp:</span>
                   {roomSensors.map((s) => (
+                    <span key={s.id} className="summary-device-tag">
+                      {s.friendly_name || s.name}
+                      {s.comment ? ` (${s.comment})` : ''}
+                    </span>
+                  ))}
+                </div>
+              )}
+              {roomCo2.length > 0 && (
+                <div className="summary-devices">
+                  <span className="summary-device-label">CO2:</span>
+                  {roomCo2.map((s) => (
                     <span key={s.id} className="summary-device-tag">
                       {s.friendly_name || s.name}
                       {s.comment ? ` (${s.comment})` : ''}
@@ -540,7 +702,7 @@ function StepSummary({ campaignId, refreshCampaign, onBack }) {
                   ))}
                 </div>
               )}
-              {roomSensors.length === 0 && roomPlugs.length === 0 && (
+              {roomSensors.length === 0 && roomCo2.length === 0 && roomPlugs.length === 0 && (
                 <p className="empty-hint">Aucun appareil</p>
               )}
             </div>
