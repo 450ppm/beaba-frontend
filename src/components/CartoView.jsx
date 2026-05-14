@@ -57,6 +57,26 @@ export default function CartoView({ onClose }) {
     }
   }, []);
 
+  // Tune force-graph layout once the ref is ready (more space between nodes)
+  useEffect(() => {
+    const fg = fgRef.current;
+    if (!fg || loading) return;
+    try {
+      fg.d3Force('charge')?.strength(-600).distanceMax(800);
+      fg.d3Force('link')?.distance((link) => {
+        const s = typeof link.source === 'object' ? link.source : null;
+        const t = typeof link.target === 'object' ? link.target : null;
+        const sType = s?.type;
+        const tType = t?.type;
+        if (sType === 'household' || tType === 'household') return 200;
+        if (sType === 'room' || tType === 'room') return 130;
+        return 70; // plug → appliance
+      });
+      fg.d3Force('center')?.strength(0.04);
+      fg.d3ReheatSimulation?.();
+    } catch { /* ignore */ }
+  }, [loading, graphData.nodes.length]);
+
   useEffect(() => {
     fetchData();
   }, [fetchData]);
@@ -264,9 +284,17 @@ export default function CartoView({ onClose }) {
         ctx.fillText(node.icon, node.x, node.y);
       }
 
-      // Label below
+      // Label below — hide if zoom too low except for key nodes
       const label = node.label || '';
-      if (label && globalScale > 0.5) {
+      const showLabel =
+        label && (
+          isHovered ||
+          node.type === 'household' ||
+          node.type === 'room' ||
+          (node.type === 'plug' && (globalScale > 0.85 || node.power_w > 1)) ||
+          (node.type === 'appliance' && globalScale > 1.1)
+        );
+      if (showLabel) {
         ctx.font = `${fontSize}px Inter, Sans-Serif`;
         ctx.fillStyle = '#e5e7eb';
         ctx.textAlign = 'center';
@@ -397,10 +425,10 @@ export default function CartoView({ onClose }) {
             width={size.width}
             height={size.height}
             backgroundColor={BG_COLOR}
-            cooldownTicks={120}
-            warmupTicks={50}
-            d3AlphaDecay={0.02}
-            d3VelocityDecay={0.3}
+            cooldownTicks={250}
+            warmupTicks={100}
+            d3AlphaDecay={0.012}
+            d3VelocityDecay={0.45}
             nodeRelSize={4}
             nodeCanvasObject={nodeCanvasObject}
             nodePointerAreaPaint={nodePointerAreaPaint}
@@ -408,6 +436,7 @@ export default function CartoView({ onClose }) {
             linkCanvasObjectMode={() => 'replace'}
             onNodeClick={handleNodeClick}
             onNodeHover={(n) => setHoveredNode(n || null)}
+            onEngineStop={() => fgRef.current?.zoomToFit(400, 60)}
             enableNodeDrag={true}
             enableZoomInteraction={true}
             enablePanInteraction={true}
