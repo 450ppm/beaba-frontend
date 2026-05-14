@@ -34,6 +34,13 @@ export default function PlugDetailModal({ plug, room, onClose, onUpdated }) {
     setLoading(false);
   }, [plug.id]);
 
+  // Re-fetch local appliance list AND notify parent (CartoView / ApplianceList)
+  // so their cached appliancesByPlug map reflects the change.
+  const refreshAfterMutation = useCallback(async () => {
+    await fetchAppliances();
+    if (onUpdated) onUpdated();
+  }, [fetchAppliances, onUpdated]);
+
   const fetchProfile = useCallback(async () => {
     setProfileLoading(true);
     try {
@@ -66,7 +73,7 @@ export default function PlugDetailModal({ plug, room, onClose, onUpdated }) {
       await api.post(`/api/plugs/${plug.id}/appliances`, {
         name: 'Nouvel appareil',
       });
-      await fetchAppliances();
+      await refreshAfterMutation();
     } catch { /* empty */ }
   };
 
@@ -85,7 +92,7 @@ export default function PlugDetailModal({ plug, room, onClose, onUpdated }) {
           category: catId || 'other',
         });
       }
-      await fetchAppliances();
+      await refreshAfterMutation();
     } catch { /* empty */ }
   };
 
@@ -280,7 +287,7 @@ export default function PlugDetailModal({ plug, room, onClose, onUpdated }) {
                   key={app.id}
                   plugId={plug.id}
                   appliance={app}
-                  onChanged={fetchAppliances}
+                  onChanged={refreshAfterMutation}
                 />
               ))}
             </div>
