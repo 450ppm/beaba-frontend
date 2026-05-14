@@ -57,26 +57,6 @@ export default function CartoView({ onClose }) {
     }
   }, []);
 
-  // Tune force-graph layout once the ref is ready (more space between nodes)
-  useEffect(() => {
-    const fg = fgRef.current;
-    if (!fg || loading) return;
-    try {
-      fg.d3Force('charge')?.strength(-600).distanceMax(800);
-      fg.d3Force('link')?.distance((link) => {
-        const s = typeof link.source === 'object' ? link.source : null;
-        const t = typeof link.target === 'object' ? link.target : null;
-        const sType = s?.type;
-        const tType = t?.type;
-        if (sType === 'household' || tType === 'household') return 200;
-        if (sType === 'room' || tType === 'room') return 130;
-        return 70; // plug → appliance
-      });
-      fg.d3Force('center')?.strength(0.04);
-      fg.d3ReheatSimulation?.();
-    } catch { /* ignore */ }
-  }, [loading, graphData.nodes.length]);
-
   useEffect(() => {
     fetchData();
   }, [fetchData]);
@@ -198,6 +178,26 @@ export default function CartoView({ onClose }) {
 
     return { nodes, links, totalW };
   }, [mapData, appliancesByPlug, campaign]);
+
+  // Tune force-graph layout for better spacing
+  useEffect(() => {
+    const fg = fgRef.current;
+    if (!fg || loading) return;
+    try {
+      fg.d3Force('charge')?.strength(-600).distanceMax(800);
+      fg.d3Force('link')?.distance((link) => {
+        const s = typeof link.source === 'object' ? link.source : null;
+        const t = typeof link.target === 'object' ? link.target : null;
+        const sType = s?.type;
+        const tType = t?.type;
+        if (sType === 'household' || tType === 'household') return 200;
+        if (sType === 'room' || tType === 'room') return 130;
+        return 70;
+      });
+      fg.d3Force('center')?.strength(0.04);
+      fg.d3ReheatSimulation?.();
+    } catch { /* ignore */ }
+  }, [loading, graphData.nodes.length]);
 
   const totalPower = graphData.totalW || 0;
 
