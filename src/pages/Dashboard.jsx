@@ -203,9 +203,9 @@ export default function Dashboard({ onRequestEndMeters }) {
 
   return (
     <div className="db">
-      {/* Ambient background — radial glows, decorative only */}
+      {/* Ambient background — radial glow bottom-left only (top-right
+          conflicted visually with the red Chaudiere button + CO2 card). */}
       <div className="db-bg" aria-hidden="true">
-        <div className="db-bg-glow db-bg-glow-1" />
         <div className="db-bg-glow db-bg-glow-2" />
       </div>
 
