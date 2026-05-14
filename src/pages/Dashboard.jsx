@@ -8,10 +8,12 @@ import KpiCard from '../components/KpiCard';
 import ApplianceList from '../components/ApplianceList';
 import SensorList from '../components/SensorList';
 import RoomCard from '../components/RoomCard';
+import CartoView from '../components/CartoView';
 import './Dashboard.css';
 
 export default function Dashboard({ onRequestEndMeters }) {
   const { campaign } = useCampaign();
+  const [showCarto, setShowCarto] = useState(false);
 
   /* ── API polling ─────────────────────────────────────── */
   const { data: mapData, loading: mapLoading } = usePolling(
@@ -79,7 +81,21 @@ export default function Dashboard({ onRequestEndMeters }) {
   return (
     <div className="db">
       {/* ── Top strip ────────────────────────────────── */}
-      <CampaignBanner onRequestEndMeters={onRequestEndMeters} />
+      <div className="db-top-row">
+        <div className="db-top-banner">
+          <CampaignBanner onRequestEndMeters={onRequestEndMeters} />
+        </div>
+        <button
+          type="button"
+          className="db-carto-btn"
+          onClick={() => setShowCarto(true)}
+          aria-label="Voir la carte du logement"
+          title="Voir la carte du logement"
+        >
+          <span className="db-carto-icon">🗺️</span>
+          <span className="db-carto-label">Carte du logement</span>
+        </button>
+      </div>
 
       {/* ── KPI row ──────────────────────────────────── */}
       <div className="db-kpi-row">
@@ -157,6 +173,9 @@ export default function Dashboard({ onRequestEndMeters }) {
           </button>
         </div>
       )}
+
+      {/* ── Fullscreen carto overlay ─────────────────── */}
+      {showCarto && <CartoView onClose={() => setShowCarto(false)} />}
     </div>
   );
 }
