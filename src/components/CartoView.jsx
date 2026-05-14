@@ -217,6 +217,16 @@ export default function CartoView({ onClose }) {
       const fontSize = Math.max(10, 12 / globalScale);
       const isHovered = hoveredNode && hoveredNode.id === node.id;
 
+      // Skip render if coords or size not yet computed by force engine
+      if (
+        !Number.isFinite(node.x) ||
+        !Number.isFinite(node.y) ||
+        !Number.isFinite(node.size) ||
+        node.size <= 0
+      ) {
+        return;
+      }
+
       // Glow ring for active plug
       if (node.type === 'plug' && node.power_w > 1) {
         const grad = ctx.createRadialGradient(
