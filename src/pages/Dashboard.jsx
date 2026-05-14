@@ -36,6 +36,17 @@ export default function Dashboard({ onRequestEndMeters }) {
     10000
   );
 
+  // Vraie consommation du jour : somme integree sur la plage 00:00 -> maintenant
+  // calculee cote API a partir des deltas energy_kwh (fallback integration des
+  // power_w), pas une extrapolation de la puissance instantanee.
+  const { data: dailyPowerData } = usePolling(
+    useCallback(() => {
+      const today = new Date().toISOString().slice(0, 10);
+      return api.get('/api/readings/power/daily', { params: { from: today, to: today } });
+    }, []),
+    60000
+  );
+
   /* ── KPI computations ────────────────────────────────── */
   const totalPower = powerData?.reduce((sum, r) => sum + (r.power_w || 0), 0) ?? 0;
   const activeDevices = powerData?.filter((r) => (r.power_w || 0) > 1).length ?? 0;
@@ -59,14 +70,14 @@ export default function Dashboard({ onRequestEndMeters }) {
     }
   }, [totalPower]);
 
-  /* ── Daily consumption estimate (rough: average W * hours elapsed) ── */
+  /* ── Consommation du jour : cumul reel depuis 00:00 ── */
   const dailyKwh = useMemo(() => {
-    const now = new Date();
-    const hoursElapsed = now.getHours() + now.getMinutes() / 60;
-    if (hoursElapsed < 0.1 || totalPower === 0) return 0;
-    // Very rough estimate: current power * hours / 1000
-    return ((totalPower * hoursElapsed) / 1000).toFixed(2);
-  }, [totalPower]);
+    if (!dailyPowerData || !dailyPowerData.length) return '0.00';
+    // L'API renvoie 0 ou 1 entree pour aujourd'hui (filtre from=to=today).
+    const today = new Date().toISOString().slice(0, 10);
+    const entry = dailyPowerData.find((d) => d.date === today) || dailyPowerData[0];
+    return (entry?.total_kwh ?? 0).toFixed(2);
+  }, [dailyPowerData]);
 
   /* ── Loading state ───────────────────────────────────── */
   if (mapLoading && tempLoading) {
@@ -111,7 +122,7 @@ export default function Dashboard({ onRequestEndMeters }) {
           value={dailyKwh}
           unit="kWh"
           accent="orange"
-          subtitle="Estimation basee sur la puissance actuelle"
+          subtitle="Cumul depuis minuit"
         />
         <KpiCard
           label="Appareils actifs"

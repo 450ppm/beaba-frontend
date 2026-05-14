@@ -24,6 +24,9 @@ export default function PlugDetailModal({ plug, room, onClose, onUpdated }) {
     is_multiprise: !!plug.is_multiprise,
   });
   const [showStats, setShowStats] = useState(false);
+  // Local mirror of plug.is_multiprise — flipped optimistically when the user
+  // adds a 2nd appliance to a single-plug, before parent refresh propagates.
+  const [isMulti, setIsMulti] = useState(!!plug.is_multiprise);
 
   const fetchAppliances = useCallback(async () => {
     setLoading(true);
@@ -70,6 +73,12 @@ export default function PlugDetailModal({ plug, room, onClose, onUpdated }) {
 
   const addAppliance = async () => {
     try {
+      // Adding a 2nd+ appliance on a single plug → upgrade it to multiprise
+      // server-side so the row stays consistent. Single plug = 1 appliance.
+      if (!isMulti && appliances.length >= 1) {
+        await api.put(`/api/plugs/${plug.id}`, { is_multiprise: true });
+        setIsMulti(true);
+      }
       await api.post(`/api/plugs/${plug.id}/appliances`, {
         name: 'Nouvel appareil',
       });
@@ -81,7 +90,7 @@ export default function PlugDetailModal({ plug, room, onClose, onUpdated }) {
     const catId = SUGGESTION_TO_CATEGORY[sugg.category] || null;
     try {
       // Si un appareil existe deja et qu'il est seul, on lui applique
-      if (!plug.is_multiprise && appliances.length === 1) {
+      if (!isMulti && appliances.length === 1) {
         await api.put(
           `/api/plugs/${plug.id}/appliances/${appliances[0].id}`,
           { category: catId || 'other' }
@@ -262,9 +271,9 @@ export default function PlugDetailModal({ plug, room, onClose, onUpdated }) {
         <div className="plug-appliances-section">
           <div className="plug-appliances-header">
             <h3 className="plug-section-title">
-              {plug.is_multiprise ? 'Appareils branches' : 'Appareil'}
+              {isMulti ? 'Appareils branches' : 'Appareil'}
             </h3>
-            {plug.is_multiprise && (
+            {appliances.length > 0 && (
               <button className="btn-secondary-small" onClick={addAppliance}>
                 + Ajouter un appareil
               </button>
