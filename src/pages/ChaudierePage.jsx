@@ -6,6 +6,19 @@ import {
 import api from '../api';
 import './ChaudierePage.css';
 
+const KIND_LABEL = {
+  boiler_out: 'Chaudiere',
+  boiler_return: 'Retour chaudiere',
+  dhw_tank: 'Chauffe-eau',
+  radiator: 'Radiateur',
+};
+const KIND_ICON = {
+  boiler_out: '🔥',
+  boiler_return: '↩',
+  dhw_tank: '🚿',
+  radiator: '♨',
+};
+
 const PERIODS = [
   { id: '24h', label: '24h', hours: 24 },
   { id: '48h', label: '48h', hours: 48 },
@@ -24,27 +37,27 @@ function formatTime(ts) {
 function NoSensorState() {
   return (
     <div className="ch-empty">
-      <div className="ch-empty-icon">🔥</div>
+      <div className="ch-empty-icon">🔥 🚿</div>
       <h3>Aucun capteur configure</h3>
       <p>
-        Pour analyser les cycles de chauffe, place une sonde de temperature
-        (DS18B20 + Shelly Plus Add-On par exemple) sur le tuyau de depart
-        de la chaudiere, et enregistre-la cote backend :
+        Place une sonde DS18B20 (via Shelly Plus + Add-On) sur le tuyau de
+        depart chaudiere et/ou sur la cuve du chauffe-eau, puis enregistre
+        chaque capteur :
       </p>
       <pre className="ch-empty-code">
-{`POST /api/pipe/sensors
-{
-  "name": "Depart chaudiere",
-  "kind": "boiler_out",
-  "shelly_ip": "192.168.1.50",
-  "shelly_channel": 100,
-  "baseline_c": 30
-}`}
+{`# Chaudiere — analyse cycles + correlation pieces
+POST /api/pipe/sensors
+{ "name": "Depart chaudiere", "kind": "boiler_out",
+  "shelly_ip": "192.168.X.A", "shelly_channel": 100, "baseline_c": 30 }
+
+# Chauffe-eau — pertes au repos + soutirages
+POST /api/pipe/sensors
+{ "name": "Ballon ECS", "kind": "dhw_tank",
+  "shelly_ip": "192.168.X.B", "shelly_channel": 100, "baseline_c": 20 }`}
       </pre>
       <p className="ch-empty-hint">
-        La sonde se fixe contre le tuyau cuivre avec un collier + pate
-        thermique + isolant par-dessus. Les valeurs sont prelevees toutes
-        les 20 s (variable SHELLY_PIPE_POLL_S).
+        Fixation : collier + pate thermique + manchon isolant par-dessus.
+        Releves toutes les 20 s (SHELLY_PIPE_POLL_S).
       </p>
     </div>
   );
@@ -144,10 +157,11 @@ export default function ChaudierePage({ onClose }) {
         <div className="ch-brand">
           <img src="/beaba_banner.png" alt="Beaba" className="ch-logo" />
           <div className="ch-title">
-            <h2>Chaudiere &amp; cycles de chauffe</h2>
+            <h2>Chaudiere &amp; ECS</h2>
             <p className="ch-subtitle">
-              Detection de cycles a partir de la temperature de depart, avec
-              diagnostic de surchauffe et de sous-dimensionnement.
+              {sensor?.kind === 'dhw_tank'
+                ? 'Recharges, soutirages et pertes au repos du chauffe-eau.'
+                : 'Detection de cycles, surchauffe et sous-dimensionnement de la chaudiere.'}
             </p>
           </div>
         </div>
@@ -172,8 +186,10 @@ export default function ChaudierePage({ onClose }) {
                     onClick={() => setSelectedId(s.id)}
                     style={selectedId === s.id ? { borderColor: s.color, color: s.color } : null}
                   >
+                    <span className="ch-sensor-kind">{KIND_ICON[s.kind] || '•'}</span>
                     <span className="ch-sensor-dot" style={{ background: s.color }} />
-                    {s.name}
+                    <span>{s.name}</span>
+                    <span className="ch-sensor-badge">{KIND_LABEL[s.kind] || s.kind}</span>
                   </button>
                 ))}
               </div>
@@ -189,8 +205,27 @@ export default function ChaudierePage({ onClose }) {
               </div>
             </div>
 
-            {/* KPIs */}
-            {a && (
+            {/* KPIs — adapte selon kind du capteur */}
+            {a && sensor?.kind === 'dhw_tank' ? (
+              <div className="ch-kpis">
+                <Kpi label="Recharges" value={a.recharges_count ?? 0} unit="" />
+                <Kpi label="Duree moyenne" value={a.avg_recharge_duration_min ?? '—'} unit="min" />
+                <Kpi label="Pic moyen" value={a.avg_recharge_peak_c ?? '—'} unit="°C" />
+                <Kpi
+                  label="Soutirages"
+                  value={a.soutirages_count ?? 0}
+                  unit=""
+                  accent={a.soutirages_count > 0 ? 'warn' : 'good'}
+                />
+                <Kpi
+                  label="Pertes au repos"
+                  value={a.resting_loss_c_per_h != null ? a.resting_loss_c_per_h.toFixed(2) : '—'}
+                  unit="°C/h"
+                  accent={a.resting_loss_c_per_h == null ? null : a.resting_loss_c_per_h > 1 ? 'bad' : a.resting_loss_c_per_h > 0.4 ? 'warn' : 'good'}
+                />
+                <Kpi label="Fenetre repos" value={a.resting_window_min ?? 0} unit="min" />
+              </div>
+            ) : a ? (
               <div className="ch-kpis">
                 <Kpi label="Cycles detectes" value={a.cycles_count} unit="" />
                 <Kpi label="Duree moyenne" value={a.avg_duration_min ?? '—'} unit="min" />
@@ -209,7 +244,7 @@ export default function ChaudierePage({ onClose }) {
                   accent={a.overheating_events > 0 ? 'bad' : 'good'}
                 />
               </div>
-            )}
+            ) : null}
 
             {/* Timeline chart */}
             <div className="ch-chart-wrap">

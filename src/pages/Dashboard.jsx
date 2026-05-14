@@ -238,10 +238,10 @@ export default function Dashboard({ onRequestEndMeters }) {
             type="button"
             className="db-action-btn db-action-boiler"
             onClick={() => setShowChaudiere(true)}
-            aria-label="Chaudiere et cycles"
+            aria-label="Chaudiere et ECS"
           >
             <span className="db-action-icon">🔥</span>
-            <span className="db-action-label">Chaudiere</span>
+            <span className="db-action-label">Chaudiere &amp; ECS</span>
           </button>
         </div>
       </header>
