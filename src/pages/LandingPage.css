@@ -21,7 +21,7 @@
 }
 
 .landing-hero-logo {
-  height: 160px;
+  height: 260px;
   margin-bottom: 40px;
   filter: drop-shadow(0 0 40px rgba(245, 166, 35, 0.15));
 }
@@ -305,7 +305,7 @@
   }
 
   .landing-hero-logo {
-    height: 100px;
+    height: 160px;
   }
 
   .landing-hero-subtitle {

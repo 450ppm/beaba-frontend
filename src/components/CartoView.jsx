@@ -441,12 +441,9 @@ export default function CartoView({ onClose }) {
       ctx.strokeStyle = isHovered ? '#ffffff' : 'rgba(255,255,255,0.25)';
       ctx.stroke();
 
-      // Inner icon / emoji
+      // Inner icon / emoji — rendered white via offscreen mask
       if (node.icon) {
-        ctx.font = `${node.size * 1.1}px Sans-Serif`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(node.icon, node.x, node.y);
+        drawWhiteIcon(ctx, node.icon, node.x, node.y, node.size * 1.1);
       }
 
       // Label below — hide if zoom too low except for key nodes
@@ -705,6 +702,33 @@ export default function CartoView({ onClose }) {
 }
 
 /* ── Helpers ───────────────────────────────────────────────── */
+
+// Cache of pre-rendered white-masked icon sprites, keyed by `${icon}@${px}`.
+// Emoji glyphs are color fonts on canvas — fillStyle is ignored by fillText for them.
+// Drawing into an offscreen canvas then using `source-in` to overlay white tints
+// the glyph shape regardless of the original color.
+const _iconSpriteCache = new Map();
+function drawWhiteIcon(ctx, icon, x, y, fontPx) {
+  const px = Math.max(8, Math.round(fontPx));
+  const key = `${icon}@${px}`;
+  let sprite = _iconSpriteCache.get(key);
+  if (!sprite) {
+    const dim = px * 2;
+    sprite = document.createElement('canvas');
+    sprite.width = dim;
+    sprite.height = dim;
+    const sctx = sprite.getContext('2d');
+    sctx.font = `${px}px Sans-Serif`;
+    sctx.textAlign = 'center';
+    sctx.textBaseline = 'middle';
+    sctx.fillText(icon, dim / 2, dim / 2);
+    sctx.globalCompositeOperation = 'source-in';
+    sctx.fillStyle = '#ffffff';
+    sctx.fillRect(0, 0, dim, dim);
+    _iconSpriteCache.set(key, sprite);
+  }
+  ctx.drawImage(sprite, x - sprite.width / 2, y - sprite.height / 2);
+}
 
 function hexToRgba(hex, alpha = 1) {
   if (!hex) return `rgba(100,116,139,${alpha})`;
