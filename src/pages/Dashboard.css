@@ -168,15 +168,6 @@
   transition: width 0.4s ease, background 0.4s ease;
   opacity: 0.65;
 }
-.kpi-co2-marker {
-  position: absolute;
-  top: 50%;
-  width: 3px;
-  height: 14px;
-  border-radius: 2px;
-  transform: translate(-50%, -50%);
-  box-shadow: 0 0 6px currentColor;
-}
 .kpi-co2-ends {
   display: flex;
   justify-content: space-between;

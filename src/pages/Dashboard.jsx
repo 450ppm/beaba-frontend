@@ -41,7 +41,6 @@ function Co2Gauge({ ppm, threshold = 450, preindustrial = 280 }) {
     <div className="kpi-co2-gauge" aria-label={`CO2 ${ppm} ppm, ${pct}% du chemin vers le seuil ${threshold}`}>
       <div className="kpi-co2-track">
         <div className="kpi-co2-fill" style={{ width: `${pct}%`, background: color }} />
-        <div className="kpi-co2-marker" style={{ left: `${pct}%`, background: color }} />
       </div>
       <div className="kpi-co2-ends">
         <span>{preindustrial}</span>
