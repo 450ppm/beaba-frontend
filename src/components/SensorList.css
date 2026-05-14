@@ -78,6 +78,37 @@
 .sensor-temp-hot { color: #ef4444; }
 .sensor-temp-neutral { color: #64748b; }
 
+.sensor-co2-cal-badge {
+  margin-left: 8px;
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: #34d399;
+  background: rgba(16,185,129,0.12);
+  padding: 1px 6px;
+  border-radius: 999px;
+}
+.sensor-co2-cal-btn {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.08);
+  color: #94a3b8;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: all 0.15s;
+  margin-left: 6px;
+}
+.sensor-co2-cal-btn:hover {
+  color: #fbbf24;
+  border-color: rgba(245,158,11,0.4);
+}
+
 .sensor-humidity {
   font-size: 0.85rem;
   color: #64748b;

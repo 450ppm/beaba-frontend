@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import { COMFORT_CONFIG } from '../lib/comfort';
+import Co2CalibrationModal from './Co2CalibrationModal';
 import './SensorList.css';
 
 function getComfortClass(temp) {
@@ -33,6 +35,7 @@ function getCo2Class(ppm) {
 export default function SensorList({ tempData, co2Data }) {
   const hasTemp = tempData && tempData.length > 0;
   const hasCo2 = co2Data && co2Data.length > 0;
+  const [calibratingSensor, setCalibratingSensor] = useState(null);
 
   if (!hasTemp && !hasCo2) {
     return (
@@ -71,6 +74,7 @@ export default function SensorList({ tempData, co2Data }) {
 
         {co2Data?.map((sensor) => {
           const co2Class = getCo2Class(sensor.co2_ppm);
+          const calibrated = sensor.calibration_offset_ppm && Math.abs(sensor.calibration_offset_ppm) > 0.5;
           return (
             <div key={`c_${sensor.sensor_id}`} className={`sensor-row sensor-co2 sensor-${co2Class}`}>
               <div className="sensor-info">
@@ -78,16 +82,34 @@ export default function SensorList({ tempData, co2Data }) {
                   <span className="sensor-co2-label">CO2</span>
                   {sensor.room_name || sensor.sensor_name}
                 </span>
+                {calibrated && (
+                  <span className="sensor-co2-cal-badge" title={`Calibre : offset ${sensor.calibration_offset_ppm > 0 ? '+' : ''}${sensor.calibration_offset_ppm} ppm`}>
+                    cal
+                  </span>
+                )}
               </div>
               <div className="sensor-values">
                 <span className={`sensor-temp sensor-co2-value sensor-co2-${co2Class}`}>
                   {sensor.co2_ppm} <small>ppm</small>
                 </span>
+                <button
+                  type="button"
+                  className="sensor-co2-cal-btn"
+                  onClick={() => setCalibratingSensor(sensor)}
+                  title="Calibrer ce capteur sur le CO2 atmospherique"
+                  aria-label="Calibrer"
+                >⚙</button>
               </div>
             </div>
           );
         })}
       </div>
+      {calibratingSensor && (
+        <Co2CalibrationModal
+          sensor={calibratingSensor}
+          onClose={() => setCalibratingSensor(null)}
+        />
+      )}
     </div>
   );
 }
