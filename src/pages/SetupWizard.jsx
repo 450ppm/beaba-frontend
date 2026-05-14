@@ -3,6 +3,7 @@ import api from '../api';
 import { useCampaign } from '../context/CampaignContext';
 import StepIndicator from '../components/StepIndicator';
 import ColorPicker from '../components/ColorPicker';
+import MeterReadingsPage from './MeterReadingsPage';
 import './SetupWizard.css';
 
 export default function SetupWizard() {
@@ -18,23 +19,41 @@ export default function SetupWizard() {
       <StepIndicator current={step} />
       <div className="setup-content">
         {step === 1 && <StepPreparation onNext={() => setStep(2)} />}
-        {step === 2 && <StepRooms onNext={() => setStep(3)} onBack={() => setStep(1)} />}
+        {step === 2 && (
+          <StepStartMeters onNext={() => setStep(3)} onBack={() => setStep(1)} />
+        )}
         {step === 3 && (
-          <StepTempSensors onNext={() => setStep(4)} onBack={() => setStep(2)} />
+          <StepRooms onNext={() => setStep(4)} onBack={() => setStep(2)} />
         )}
         {step === 4 && (
-          <StepCo2Sensors onNext={() => setStep(5)} onBack={() => setStep(3)} />
+          <StepTempSensors onNext={() => setStep(5)} onBack={() => setStep(3)} />
         )}
         {step === 5 && (
-          <StepPlugs onNext={() => setStep(6)} onBack={() => setStep(4)} />
+          <StepCo2Sensors onNext={() => setStep(6)} onBack={() => setStep(4)} />
         )}
         {step === 6 && (
+          <StepPlugs onNext={() => setStep(7)} onBack={() => setStep(5)} />
+        )}
+        {step === 7 && (
           <StepSummary
             campaignId={campaign?.id}
             refreshCampaign={refreshCampaign}
-            onBack={() => setStep(5)}
+            onBack={() => setStep(6)}
           />
         )}
+      </div>
+    </div>
+  );
+}
+
+/* ── Step Compteurs (debut) ──────────────────────────────── */
+function StepStartMeters({ onNext, onBack }) {
+  return (
+    <div className="step-panel">
+      <MeterReadingsPage phase="start" onComplete={onNext} embedded />
+      <div className="step-nav">
+        <button className="btn-back" onClick={onBack}>Retour</button>
+        <span />
       </div>
     </div>
   );
@@ -470,13 +489,16 @@ function StepCo2Sensors({ onNext, onBack }) {
   );
 }
 
-/* ── Step 3: Plugs ─────────────────────────────────────── */
+/* ── Step Prises (version legere) ─────────────────────────
+   On ne demande ici qu'un label + une piece + multiprise oui/non.
+   Le detail des appareils est configure plus tard depuis le dashboard. */
 function StepPlugs({ onNext, onBack }) {
   const [zigbeeDevices, setZigbeeDevices] = useState([]);
   const [rooms, setRooms] = useState([]);
   const [assigned, setAssigned] = useState([]);
   const [selections, setSelections] = useState({});
   const [applianceNames, setApplianceNames] = useState({});
+  const [multipriseFlags, setMultipriseFlags] = useState({});
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -522,6 +544,7 @@ function StepPlugs({ onNext, onBack }) {
         zigbee_id: device.friendly_name,
         room_id: roomId,
         appliance_name: appliance.trim(),
+        is_multiprise: !!multipriseFlags[device.ieee_address],
       });
       await fetchAll();
     } catch { /* empty */ }
@@ -538,7 +561,8 @@ function StepPlugs({ onNext, onBack }) {
     <div className="step-panel">
       <h2>Prises connectees</h2>
       <p className="step-desc">
-        Associez chaque prise Innr SP 240 a une piece et nommez l'appareil mesure.
+        Donnez un nom court a chaque prise (ex: "TV", "Bureau", "Multiprise salon").
+        Le detail des appareils pourra etre complete plus tard depuis le tableau de bord.
       </p>
 
       <button
@@ -555,7 +579,9 @@ function StepPlugs({ onNext, onBack }) {
           <h3>Prises assignees</h3>
           {assigned.map((p) => (
             <div key={p.id} className="assigned-item">
-              <span className="assigned-name">{p.appliance_name}</span>
+              <span className="assigned-name">
+                {p.is_multiprise ? '🔌 ' : ''}{p.appliance_name}
+              </span>
               <span className="assigned-room">
                 {rooms.find((r) => r.id === p.room_id)?.name || '—'}
               </span>
@@ -583,12 +609,25 @@ function StepPlugs({ onNext, onBack }) {
               </select>
               <input
                 type="text"
-                placeholder="Nom de l'appareil (ex: TV, Frigo)"
+                placeholder="Nom de la prise (ex: TV, Bureau)"
                 value={applianceNames[d.ieee_address] || ''}
                 onChange={(e) =>
                   setApplianceNames((a) => ({ ...a, [d.ieee_address]: e.target.value }))
                 }
               />
+              <label className="multiprise-toggle">
+                <input
+                  type="checkbox"
+                  checked={!!multipriseFlags[d.ieee_address]}
+                  onChange={(e) =>
+                    setMultipriseFlags((m) => ({
+                      ...m,
+                      [d.ieee_address]: e.target.checked,
+                    }))
+                  }
+                />
+                <span>Multiprise (plusieurs appareils)</span>
+              </label>
               <button
                 type="button"
                 className="btn-secondary"

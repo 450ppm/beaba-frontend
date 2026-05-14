@@ -412,3 +412,22 @@
   text-align: center;
   padding: 12px 0;
 }
+
+/* ── Multiprise toggle (Step Prises) ────────────── */
+.multiprise-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #ccc;
+  font-size: 0.85rem;
+  margin: 4px 0 8px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.multiprise-toggle input[type='checkbox'] {
+  width: 16px;
+  height: 16px;
+  accent-color: #f5a623;
+  cursor: pointer;
+}

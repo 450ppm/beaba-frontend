@@ -30,7 +30,7 @@ const METER_CONFIGS = [
   },
 ];
 
-export default function MeterReadingsPage({ phase, onComplete }) {
+export default function MeterReadingsPage({ phase, onComplete, embedded }) {
   const { campaign } = useCampaign();
   const [readings, setReadings] = useState([]);
   const [values, setValues] = useState({});
@@ -90,7 +90,7 @@ export default function MeterReadingsPage({ phase, onComplete }) {
   };
 
   return (
-    <div className="meter-readings-page">
+    <div className={`meter-readings-page ${embedded ? 'meter-embedded' : ''}`}>
       <div className="meter-header">
         <h1>{isStart ? 'Releves de debut de campagne' : 'Releves de fin de campagne'}</h1>
         <p className="meter-description">

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { CampaignProvider, useCampaign } from './context/CampaignContext';
@@ -44,22 +44,7 @@ function AdminRoute({ children }) {
 
 function AppContent() {
   const { campaign, loading, noCampaign, refreshCampaign } = useCampaign();
-  const [meterStatus, setMeterStatus] = useState(null);
-  const [meterLoading, setMeterLoading] = useState(false);
   const [showEndMeters, setShowEndMeters] = useState(false);
-
-  const fetchMeterStatus = useCallback(() => {
-    if (campaign?.status !== 'active') return;
-    setMeterLoading(true);
-    api.get('/api/meters/status')
-      .then(res => setMeterStatus(res.data))
-      .catch(() => setMeterStatus(null))
-      .finally(() => setMeterLoading(false));
-  }, [campaign?.status]);
-
-  useEffect(() => {
-    fetchMeterStatus();
-  }, [fetchMeterStatus]);
 
   if (loading) {
     return <div className="loading">Chargement...</div>;
@@ -87,28 +72,7 @@ function AppContent() {
     );
   }
 
-  // Active campaign
-  if (meterLoading) {
-    return <div className="loading">Chargement...</div>;
-  }
-
-  const startComplete = meterStatus &&
-    meterStatus.electricity_start &&
-    meterStatus.gas_start &&
-    meterStatus.water_start;
-
-  if (!startComplete) {
-    return (
-      <>
-        <Header />
-        <MeterReadingsPage
-          phase="start"
-          onComplete={() => fetchMeterStatus()}
-        />
-      </>
-    );
-  }
-
+  // Active campaign — releves de debut deja captures via le wizard.
   if (showEndMeters) {
     return (
       <>

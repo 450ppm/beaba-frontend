@@ -4,6 +4,15 @@
   padding: 1.5rem 1rem 3rem;
 }
 
+.meter-readings-page.meter-embedded {
+  padding: 0;
+  max-width: none;
+}
+
+.meter-readings-page.meter-embedded .meter-header h1 {
+  font-size: 1.15rem;
+}
+
 .meter-header {
   text-align: center;
   margin-bottom: 2rem;
