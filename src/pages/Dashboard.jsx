@@ -100,32 +100,38 @@ export default function Dashboard({ onRequestEndMeters }) {
 
   return (
     <div className="db">
-      {/* ── Top strip ────────────────────────────────── */}
-      <div className="db-top-row">
-        <div className="db-top-banner">
+      {/* Ambient background — radial glows, decorative only */}
+      <div className="db-bg" aria-hidden="true">
+        <div className="db-bg-glow db-bg-glow-1" />
+        <div className="db-bg-glow db-bg-glow-2" />
+      </div>
+
+      {/* ── Hero strip ────────────────────────────────── */}
+      <header className="db-hero">
+        <div className="db-hero-banner">
           <CampaignBanner onRequestEndMeters={onRequestEndMeters} />
         </div>
-        <button
-          type="button"
-          className="db-carto-btn"
-          onClick={() => setShowCarto(true)}
-          aria-label="Voir la carte du logement"
-          title="Voir la carte du logement"
-        >
-          <span className="db-carto-icon">🗺️</span>
-          <span className="db-carto-label">Carte du logement</span>
-        </button>
-        <button
-          type="button"
-          className="db-carto-btn"
-          onClick={() => setShowComfort(true)}
-          aria-label="Plages de confort"
-          title="Methode et plages de confort"
-        >
-          <span className="db-carto-icon">🌡️</span>
-          <span className="db-carto-label">Confort &amp; condensation</span>
-        </button>
-      </div>
+        <div className="db-hero-actions">
+          <button
+            type="button"
+            className="db-action-btn db-action-carto"
+            onClick={() => setShowCarto(true)}
+            aria-label="Voir la carte du logement"
+          >
+            <span className="db-action-icon">🗺️</span>
+            <span className="db-action-label">Carte du logement</span>
+          </button>
+          <button
+            type="button"
+            className="db-action-btn db-action-comfort"
+            onClick={() => setShowComfort(true)}
+            aria-label="Confort et condensation"
+          >
+            <span className="db-action-icon">🌡️</span>
+            <span className="db-action-label">Confort &amp; condensation</span>
+          </button>
+        </div>
+      </header>
 
       {/* ── KPI row ──────────────────────────────────── */}
       <div className="db-kpi-row">
@@ -181,29 +187,32 @@ export default function Dashboard({ onRequestEndMeters }) {
         />
       </div>
 
-      {/* ── Main content: chart + panels ──────────────── */}
-      <div className="db-main">
-        <div className="db-main-left">
+      {/* ── Bento : graph + appareils / pieces + capteurs ── */}
+      <div className="db-bento">
+        <section className="db-tile db-tile-chart">
           <DashboardCharts />
-        </div>
-        <div className="db-main-right">
+        </section>
+        <section className="db-tile db-tile-appliances">
           <ApplianceList powerData={powerData} />
+        </section>
+        <section className="db-tile db-tile-rooms">
+          <header className="db-tile-head">
+            <h3 className="db-tile-title">Pieces</h3>
+            <span className="db-tile-sub">{mapData?.length || 0} configurees</span>
+          </header>
+          {mapData && mapData.length > 0 ? (
+            <div className="room-grid">
+              {mapData.map((room) => (
+                <RoomCard key={room.id} room={room} />
+              ))}
+            </div>
+          ) : (
+            <p className="db-empty">Aucune piece configuree.</p>
+          )}
+        </section>
+        <section className="db-tile db-tile-sensors">
           <SensorList tempData={tempData} co2Data={co2Data} />
-        </div>
-      </div>
-
-      {/* ── Bottom strip: room overview ───────────────── */}
-      <div className="db-bottom">
-        <h3 className="db-section-title">Pieces</h3>
-        {mapData && mapData.length > 0 ? (
-          <div className="room-scroll">
-            {mapData.map((room) => (
-              <RoomCard key={room.id} room={room} />
-            ))}
-          </div>
-        ) : (
-          <p className="db-empty">Aucune piece configuree.</p>
-        )}
+        </section>
       </div>
 
       {/* ── End campaign button ──────────────────────── */}
@@ -215,7 +224,7 @@ export default function Dashboard({ onRequestEndMeters }) {
         </div>
       )}
 
-      {/* ── Fullscreen carto overlay ─────────────────── */}
+      {/* ── Fullscreen overlays ──────────────────────── */}
       {showCarto && <CartoView onClose={() => setShowCarto(false)} />}
       {showComfort && <ComfortPage onClose={() => setShowComfort(false)} />}
     </div>

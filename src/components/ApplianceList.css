@@ -8,12 +8,22 @@
 }
 
 .panel-title {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   text-transform: uppercase;
-  letter-spacing: 2px;
-  color: #64748b;
-  margin: 0 0 16px;
-  font-weight: 600;
+  letter-spacing: 1.6px;
+  color: #94a3b8;
+  margin: 0 0 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.panel-title::before {
+  content: '';
+  width: 3px;
+  height: 14px;
+  background: linear-gradient(180deg, #f59e0b, #06b6d4);
+  border-radius: 2px;
 }
 
 .panel-empty {
