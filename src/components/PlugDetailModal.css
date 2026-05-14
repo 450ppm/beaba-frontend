@@ -360,6 +360,14 @@
   font-size: 0.9rem;
 }
 
+/* La liste deroulante native herite de la couleur du select sur certains
+   navigateurs (Windows Chrome/Edge clair) — on force un fond sombre pour
+   que le texte reste lisible une fois ouvert. */
+.plug-appliance-row select option {
+  background: #1e293b;
+  color: #f1f5f9;
+}
+
 .plug-appliance-power-input {
   display: flex;
   align-items: center;
