@@ -113,9 +113,61 @@
 /* ── KPI row ─────────────────────────────────────────────── */
 .db-kpi-row {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(6, 1fr);
   gap: 16px;
   margin-bottom: 22px;
+}
+
+/* ── KPI : carte CO2 atmospherique ──────────────────────── */
+.kpi-co2-line {
+  display: block;
+  font-size: 0.78rem;
+  color: #94a3b8;
+}
+.kpi-co2-line strong { color: #f87171; }
+.kpi-co2-wink {
+  display: block;
+  margin-top: 3px;
+  font-size: 0.72rem;
+  color: #10b981;
+  font-style: italic;
+  letter-spacing: 0.2px;
+}
+.kpi-co2-gauge {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.kpi-co2-track {
+  position: relative;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.kpi-co2-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 3px;
+  transition: width 0.4s ease, background 0.4s ease;
+  opacity: 0.65;
+}
+.kpi-co2-marker {
+  position: absolute;
+  top: 50%;
+  width: 3px;
+  height: 14px;
+  border-radius: 2px;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 6px currentColor;
+}
+.kpi-co2-ends {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.65rem;
+  color: #64748b;
+  font-variant-numeric: tabular-nums;
 }
 
 /* ── Bento grid ─────────────────────────────────────────── */
@@ -271,6 +323,10 @@
 
 @media (max-width: 1500px) {
   .db-kpi-row { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (max-width: 900px) {
+  .db-kpi-row { grid-template-columns: repeat(2, 1fr); }
 }
 
 @media (max-width: 1200px) {

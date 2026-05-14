@@ -26,6 +26,30 @@ const PERIOD_LABEL = {
   month: 'du mois',
 };
 
+/* Petite jauge horizontale : du preindustriel (280 ppm) au seuil Paris (450 ppm).
+   La position represente la concentration actuelle. La couleur passe au rouge
+   quand on approche du seuil. */
+function Co2Gauge({ ppm, threshold = 450, preindustrial = 280 }) {
+  const span = Math.max(1, threshold - preindustrial);
+  const ratio = Math.max(0, Math.min(1, (ppm - preindustrial) / span));
+  const pct = (ratio * 100).toFixed(1);
+  const danger = ratio >= 0.95;
+  const warn = !danger && ratio >= 0.85;
+  const color = danger ? '#ef4444' : warn ? '#f59e0b' : '#10b981';
+  return (
+    <div className="kpi-co2-gauge" aria-label={`CO2 ${ppm} ppm, ${pct}% du chemin vers le seuil ${threshold}`}>
+      <div className="kpi-co2-track">
+        <div className="kpi-co2-fill" style={{ width: `${pct}%`, background: color }} />
+        <div className="kpi-co2-marker" style={{ left: `${pct}%`, background: color }} />
+      </div>
+      <div className="kpi-co2-ends">
+        <span>{preindustrial}</span>
+        <span style={{ color: '#ef4444' }}>{threshold}</span>
+      </div>
+    </div>
+  );
+}
+
 export default function Dashboard({ onRequestEndMeters }) {
   const { campaign } = useCampaign();
   const [showCarto, setShowCarto] = useState(false);
@@ -63,6 +87,12 @@ export default function Dashboard({ onRequestEndMeters }) {
   const { data: weatherData } = usePolling(
     useCallback(() => api.get('/api/weather/current'), []),
     15 * 60 * 1000
+  );
+
+  // CO2 atmospherique global (Mauna Loa NOAA, change tres lentement)
+  const { data: atmoCo2 } = usePolling(
+    useCallback(() => api.get('/api/weather/co2_atmospheric'), []),
+    6 * 60 * 60 * 1000
   );
 
   /* ── Donnees historiques : agregat de la fenetre ────── */
@@ -274,6 +304,28 @@ export default function Dashboard({ onRequestEndMeters }) {
                   : 'Archive Open-Meteo (latence ~2j)')
           }
         />
+        <KpiCard
+          label="CO2 atmospherique"
+          value={atmoCo2?.ppm != null ? atmoCo2.ppm.toFixed(1) : '--'}
+          unit="ppm"
+          accent="green"
+          subtitle={
+            <>
+              <span className="kpi-co2-line">
+                Seuil <strong>450 ppm</strong> · Accords de Paris
+              </span>
+              <span className="kpi-co2-wink">450ppm.be y travaille tous les jours.</span>
+            </>
+          }
+        >
+          {atmoCo2?.ppm != null && (
+            <Co2Gauge
+              ppm={atmoCo2.ppm}
+              threshold={atmoCo2.threshold_ppm || 450}
+              preindustrial={atmoCo2.preindustrial_ppm || 280}
+            />
+          )}
+        </KpiCard>
       </div>
 
       {/* ── Bento : graph + appareils / pieces + capteurs ── */}
