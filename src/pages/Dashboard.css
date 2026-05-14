@@ -79,7 +79,7 @@
 /* ── KPI row ─────────────────────────────────────────────── */
 .db-kpi-row {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 16px;
   margin-bottom: 24px;
 }
@@ -169,7 +169,13 @@
    Responsive
    ═══════════════════════════════════════════════════════════ */
 
-@media (max-width: 1280px) {
+@media (max-width: 1440px) {
+  .db-kpi-row {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 1024px) {
   .db-kpi-row {
     grid-template-columns: repeat(2, 1fr);
   }

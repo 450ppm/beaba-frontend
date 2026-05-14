@@ -10,6 +10,7 @@ import SensorList from '../components/SensorList';
 import RoomCard from '../components/RoomCard';
 import CartoView from '../components/CartoView';
 import ComfortPage from './ComfortPage';
+import { weatherIcon, weatherLabel } from '../lib/weatherCodes';
 import './Dashboard.css';
 
 export default function Dashboard({ onRequestEndMeters }) {
@@ -47,6 +48,12 @@ export default function Dashboard({ onRequestEndMeters }) {
       return api.get('/api/readings/power/daily', { params: { from: today, to: today } });
     }, []),
     60000
+  );
+
+  // Meteo exterieure courante (Open-Meteo, cache 1h cote API).
+  const { data: weatherData } = usePolling(
+    useCallback(() => api.get('/api/weather/current'), []),
+    15 * 60 * 1000
   );
 
   /* ── KPI computations ────────────────────────────────── */
@@ -159,6 +166,17 @@ export default function Dashboard({ onRequestEndMeters }) {
             avgTemp
               ? `Min ${avgTemp.min.toFixed(1)}° / Max ${avgTemp.max.toFixed(1)}°`
               : 'En attente des capteurs'
+          }
+        />
+        <KpiCard
+          label="Meteo exterieure"
+          value={weatherData?.temperature_c != null ? weatherData.temperature_c.toFixed(1) : '--'}
+          unit="°C"
+          accent="cyan"
+          subtitle={
+            weatherData
+              ? `${weatherIcon(weatherData.weather_code)} ${weatherLabel(weatherData.weather_code)} · ${weatherData.humidity_pct != null ? weatherData.humidity_pct.toFixed(0) + '%' : '--'} HR · ${weatherData.wind_speed_m_s != null ? weatherData.wind_speed_m_s.toFixed(0) + ' m/s' : '--'}`
+              : 'Open-Meteo en cours...'
           }
         />
       </div>

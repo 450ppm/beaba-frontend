@@ -11,6 +11,7 @@ import './DashboardCharts.css';
 const MODE_OPTIONS = [
   { label: 'Electricite', value: 'power' },
   { label: 'Confort', value: 'comfort' },
+  { label: 'Meteo', value: 'weather' },
 ];
 
 const PERIOD_OPTIONS = [
@@ -76,6 +77,7 @@ export default function DashboardCharts() {
   const [powerDaily, setPowerDaily] = useState([]);
   const [tempHistory, setTempHistory] = useState([]);
   const [co2History, setCo2History] = useState([]);
+  const [weatherSeries, setWeatherSeries] = useState(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -99,6 +101,27 @@ export default function DashboardCharts() {
             });
             if (!cancelled) setPowerDaily(res.data);
           }
+        } else if (mode === 'weather') {
+          // Archive Open-Meteo : horaire en 24h, journalier au-dela.
+          const interval = period === '24h' ? 'hourly' : 'daily';
+          // Pour le mode "24h" l'archive Open-Meteo a ~2 jours de latence
+          // (ERA5). On rapatrie une fenetre glissante "hier" qui est dispo,
+          // sinon les jours plus anciens.
+          const today = new Date();
+          let fromDate, toDate;
+          if (period === '24h') {
+            const d = new Date(today.getTime() - 2 * 86400000);
+            fromDate = d.toISOString().slice(0, 10);
+            toDate = new Date(today.getTime() - 1 * 86400000).toISOString().slice(0, 10);
+          } else {
+            const offset = period === '7j' ? 7 : 30;
+            fromDate = new Date(today.getTime() - offset * 86400000).toISOString().slice(0, 10);
+            toDate = new Date(today.getTime() - 2 * 86400000).toISOString().slice(0, 10);
+          }
+          const res = await api.get('/api/weather/history', {
+            params: { from: fromDate, to: toDate, interval },
+          });
+          if (!cancelled) setWeatherSeries(res.data);
         } else {
           const interval = period === '24h' ? 'hour' : 'day';
           const params = {
@@ -438,11 +461,114 @@ export default function DashboardCharts() {
     );
   };
 
+  // ── Meteo : adapte la reponse Open-Meteo archive en serie recharts ──
+  const weatherChartData = useMemo(() => {
+    if (!weatherSeries || !weatherSeries.series) return { series: [], interval: 'hourly' };
+    const s = weatherSeries.series;
+    const interval = weatherSeries.interval || 'hourly';
+    if (interval === 'hourly') {
+      const times = s.time || [];
+      const temps = s.temperature_2m || [];
+      const hums = s.relative_humidity_2m || [];
+      const winds = s.wind_speed_10m || [];
+      const precip = s.precipitation || [];
+      return {
+        interval,
+        series: times.map((t, i) => ({
+          ts: t,
+          time: formatHour(t),
+          t: temps[i],
+          rh: hums[i],
+          wind: winds[i],
+          precip: precip[i],
+        })),
+      };
+    }
+    const times = s.time || [];
+    return {
+      interval,
+      series: times.map((t, i) => ({
+        ts: t,
+        time: formatDate(t),
+        t_min: s.temperature_2m_min?.[i],
+        t_max: s.temperature_2m_max?.[i],
+        t_mean: s.temperature_2m_mean?.[i],
+        rh: s.relative_humidity_2m_mean?.[i],
+        wind: s.wind_speed_10m_max?.[i],
+        precip: s.precipitation_sum?.[i],
+      })),
+    };
+  }, [weatherSeries]);
+
+  const renderWeatherCharts = () => {
+    const { series, interval } = weatherChartData;
+    if (!series.length) return null;
+    return (
+      <>
+        <div className="dc-chart-card dc-chart-main">
+          <div className="dc-subchart-title">
+            {interval === 'hourly' ? 'Temperature & humidite (heures)' : 'Temperature (jours)'}
+          </div>
+          <ResponsiveContainer width="100%" height={350}>
+            <LineChart data={series} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} vertical={false} />
+              <XAxis dataKey="time" tick={AXIS_STYLE} stroke="transparent" tickLine={false} axisLine={false} />
+              <YAxis yAxisId="t" tick={AXIS_STYLE} stroke="transparent" tickLine={false} axisLine={false} unit={'°C'} width={50} />
+              <YAxis yAxisId="rh" orientation="right" tick={AXIS_STYLE} stroke="transparent" tickLine={false} axisLine={false} unit="%" domain={[0, 100]} width={45} />
+              <Tooltip />
+              <Legend wrapperStyle={{ color: '#64748b', fontSize: 11, paddingTop: 8 }} iconType="circle" iconSize={8} />
+              {interval === 'hourly' ? (
+                <>
+                  <Line yAxisId="t" type="monotone" dataKey="t" name="Temp ext." stroke="#06b6d4" strokeWidth={2} dot={false} />
+                  <Line yAxisId="rh" type="monotone" dataKey="rh" name="Humidite ext." stroke="#8b5cf6" strokeWidth={1.6} dot={false} />
+                </>
+              ) : (
+                <>
+                  <Line yAxisId="t" type="monotone" dataKey="t_min" name="T min" stroke="#3b82f6" strokeWidth={1.5} dot={false} />
+                  <Line yAxisId="t" type="monotone" dataKey="t_mean" name="T moy" stroke="#06b6d4" strokeWidth={2} dot={false} />
+                  <Line yAxisId="t" type="monotone" dataKey="t_max" name="T max" stroke="#f97316" strokeWidth={1.5} dot={false} />
+                  <Line yAxisId="rh" type="monotone" dataKey="rh" name="Humidite moy" stroke="#8b5cf6" strokeWidth={1.5} dot={false} />
+                </>
+              )}
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+
+        <div className="dc-chart-card dc-chart-main">
+          <div className="dc-subchart-title">
+            {interval === 'hourly' ? 'Vent & precipitations' : 'Vent max & precipitations totales'}
+          </div>
+          <ResponsiveContainer width="100%" height={220}>
+            <LineChart data={series} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} vertical={false} />
+              <XAxis dataKey="time" tick={AXIS_STYLE} stroke="transparent" tickLine={false} axisLine={false} />
+              <YAxis yAxisId="wind" tick={AXIS_STYLE} stroke="transparent" tickLine={false} axisLine={false} unit=" m/s" width={55} />
+              <YAxis yAxisId="precip" orientation="right" tick={AXIS_STYLE} stroke="transparent" tickLine={false} axisLine={false} unit=" mm" width={55} />
+              <Tooltip />
+              <Legend wrapperStyle={{ color: '#64748b', fontSize: 11, paddingTop: 8 }} iconType="circle" iconSize={8} />
+              <Line yAxisId="wind" type="monotone" dataKey="wind" name="Vent" stroke="#64748b" strokeWidth={1.6} dot={false} />
+              <Line yAxisId="precip" type="monotone" dataKey="precip" name="Precipitations" stroke="#3b82f6" strokeWidth={1.6} dot={false} />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+
+        {weatherSeries?.from && weatherSeries?.to && (
+          <p className="dc-source">
+            Source : Open-Meteo Archive ({weatherSeries.from} → {weatherSeries.to})
+            {interval === 'hourly' && period === '24h' && (
+              <span> · l'archive ERA5 a 1-2 jours de latence, on affiche la veille</span>
+            )}
+          </p>
+        )}
+      </>
+    );
+  };
+
   return (
     <section className="dc-section">
       <div className="dc-header">
         <h3 className="dc-title">
-          {mode === 'power' ? 'Consommation electrique' : 'Confort thermique'}
+          {mode === 'power' ? 'Consommation electrique' : mode === 'weather' ? 'Meteo exterieure' : 'Confort thermique'}
         </h3>
         <div className="dc-controls">
           <ChartToggle options={MODE_OPTIONS} active={mode} onChange={setMode} />
@@ -457,11 +583,12 @@ export default function DashboardCharts() {
         </div>
       )}
 
-      {mode === 'power' ? renderPowerCharts() : renderComfortCharts()}
+      {mode === 'power' ? renderPowerCharts() : mode === 'weather' ? renderWeatherCharts() : renderComfortCharts()}
 
       {!loading &&
         ((mode === 'power' && period === '24h' && !realtimeChartData.series.length) ||
          (mode === 'power' && period !== '24h' && !dailyChartData.series.length) ||
+         (mode === 'weather' && !weatherChartData.series.length) ||
          (mode === 'comfort' && !comfortData.series.length)) && (
         <div className="dc-empty">
           Pas encore de donnees pour cette periode.
