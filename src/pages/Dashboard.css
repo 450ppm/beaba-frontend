@@ -33,6 +33,13 @@
   min-width: 0;
 }
 
+/* La banniere a son propre margin-bottom pour les autres pages — on l'annule
+   ici puisque .db-top-row gere deja l'espacement vers la ligne KPI. Sans ca
+   la banniere et les boutons paraissent verticalement decales. */
+.db-top-banner .campaign-strip {
+  margin-bottom: 0;
+}
+
 .db-carto-btn {
   display: inline-flex;
   align-items: center;
