@@ -308,7 +308,7 @@ export default function Dashboard({ onRequestEndMeters }) {
           label="CO2 atmospherique"
           value={atmoCo2?.ppm != null ? atmoCo2.ppm.toFixed(1) : '--'}
           unit="ppm"
-          accent="green"
+          accent="red"
           subtitle={
             <>
               <span className="kpi-co2-line">
