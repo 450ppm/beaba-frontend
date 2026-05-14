@@ -17,7 +17,5 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  isolation: isolate;
 }
-
-/* rebuild-bust */
-
