@@ -7,11 +7,28 @@ import {
   STATUS_COLOR,
   STATUS_LABEL,
 } from '../lib/comfort';
+import ComfortChart from '../components/ComfortChart';
 import './ComfortPage.css';
+
+const STATUS_ICON = {
+  ok: '✓',
+  watch: '!',
+  mold_risk: '⚠',
+  condensation: '💧',
+};
 
 function Num({ value, digits = 1, unit = '' }) {
   if (value == null || !Number.isFinite(value)) return <span className="cf-na">—</span>;
   return <span>{value.toFixed(digits)}{unit}</span>;
+}
+
+function StatusPill({ status }) {
+  return (
+    <span className="cf-pill" style={{ background: STATUS_COLOR[status] }}>
+      <span className="cf-pill-icon">{STATUS_ICON[status]}</span>
+      {STATUS_LABEL[status]}
+    </span>
+  );
 }
 
 export default function ComfortPage({ onClose }) {
@@ -19,10 +36,12 @@ export default function ComfortPage({ onClose }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Simulateur interactif
+  // Simulateur
   const [simT, setSimT] = useState(20);
   const [simH, setSimH] = useState(55);
-  const [simExt, setSimExt] = useState(5);
+
+  // Details replies par defaut
+  const [showDetails, setShowDetails] = useState(false);
 
   useEffect(() => {
     let alive = true;
@@ -38,206 +57,249 @@ export default function ComfortPage({ onClose }) {
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
 
+  const outdoor = current?.outdoor;
+  const outdoorTempC = outdoor?.temperature_c ?? null;
+
   const simEval = useMemo(
-    () => evaluateRoom({ tIntC: simT, rhPct: simH, tExtRawC: simExt }),
-    [simT, simH, simExt]
+    () => Number.isFinite(outdoorTempC)
+      ? evaluateRoom({ tIntC: simT, rhPct: simH, tExtRawC: outdoorTempC })
+      : null,
+    [simT, simH, outdoorTempC]
   );
 
-  const wall = COMFORT_CONFIG.wall;
-  const outdoor = current?.outdoor;
+  // Pieces -> format pour le chart
+  const chartRooms = useMemo(() => {
+    if (!current?.rooms) return [];
+    return current.rooms
+      .filter((r) => r.evaluation)
+      .map((r) => ({
+        name: r.room_name,
+        tIntC: r.evaluation.inputs.t_int_c,
+        rhPct: r.evaluation.inputs.rh_pct,
+        status: r.evaluation.status,
+      }));
+  }, [current]);
+
+  // Synthese : compte des pieces par statut
+  const summary = useMemo(() => {
+    if (!current?.rooms) return null;
+    const counts = { ok: 0, watch: 0, mold_risk: 0, condensation: 0, unknown: 0 };
+    current.rooms.forEach((r) => {
+      if (!r.evaluation) counts.unknown += 1;
+      else counts[r.evaluation.status] += 1;
+    });
+    return counts;
+  }, [current]);
 
   return (
     <div className="cf-overlay" role="dialog" aria-modal="true">
+      {/* ── Header ─────────────────────────────────── */}
       <div className="cf-header">
         <div className="cf-title">
-          <h2>Plages de confort &mdash; methode et calcul</h2>
+          <h2>Confort &amp; condensation</h2>
           <p className="cf-subtitle">
-            On considere l'inconfort des qu'il y a risque de condensation ou de
-            moisissure sur la face interieure d'un mur exterieur, plutot que
-            sur des plages fixes arbitraires.
+            Chaque piece est evaluee selon le risque de condensation sur la
+            face interieure d'un mur exterieur (brique 30 cm non isolee).
           </p>
         </div>
         <button className="cf-close" onClick={onClose} aria-label="Fermer">&times;</button>
       </div>
 
       <div className="cf-body">
-        {/* ── Modele physique ────────────────────────── */}
-        <section className="cf-card">
-          <h3>1. Modele du mur</h3>
-          <p className="cf-desc">{wall.description}. La paroi laisse passer le froid de l'exterieur ; sa face interieure est donc plus froide que l'air ambiant.</p>
-          <div className="cf-grid">
-            <div><label>Epaisseur</label><strong>{wall.thickness_m} m</strong></div>
-            <div><label>Conductivite &lambda;</label><strong>{wall.conductivity_w_per_mk} W/m&middot;K</strong></div>
-            <div><label>R<sub>mur</sub> = e/&lambda;</label><strong><Num value={wall.r_wall_m2k_per_w} digits={3} unit=" m²K/W" /></strong></div>
-            <div><label>R<sub>si</sub> (couche int.)</label><strong>{wall.rsi_m2k_per_w} m²K/W</strong></div>
-            <div><label>R<sub>se</sub> (couche ext.)</label><strong>{wall.rse_m2k_per_w} m²K/W</strong></div>
-            <div><label>R<sub>total</sub></label><strong><Num value={wall.r_total_m2k_per_w} digits={3} unit=" m²K/W" /></strong></div>
-            <div className="cf-grid-wide">
-              <label>Facteur de surface f<sub>Rsi</sub> = R<sub>si</sub> / R<sub>total</sub></label>
-              <strong><Num value={wall.f_rsi} digits={3} /></strong>
-              <span className="cf-hint">La face interieure du mur recupere {(wall.f_rsi * 100).toFixed(1)}% de l'ecart de temperature int.&minus;ext.</span>
-            </div>
+        {/* ── Bandeau resume ────────────────────────── */}
+        <div className="cf-summary-row">
+          <div className="cf-stat">
+            <span className="cf-stat-label">Dehors</span>
+            <strong className="cf-stat-value"><Num value={outdoor?.temperature_c} unit="°C" /></strong>
+            <span className="cf-stat-hint">
+              ressenti mur : <Num value={outdoor?.temperature_adjusted_c} unit="°C" />
+            </span>
           </div>
-        </section>
-
-        {/* ── Correction vent ────────────────────────── */}
-        <section className="cf-card">
-          <h3>2. Temperature exterieure de calcul</h3>
-          <p className="cf-desc">
-            On retire {COMFORT_CONFIG.outdoor.wind_safety_c}&deg;C a la temperature
-            ambiante exterieure pour modeliser l'effet de refroidissement par
-            le vent sur les facades exposees.
-          </p>
-          <code className="cf-formula">T<sub>ext_adj</sub> = T<sub>ext</sub> &minus; {COMFORT_CONFIG.outdoor.wind_safety_c}&deg;C</code>
-          {outdoor && (
-            <div className="cf-grid">
-              <div><label>Meteo (Open-Meteo)</label><strong><Num value={outdoor.temperature_c} unit="&deg;C" /></strong></div>
-              <div><label>Apres correction vent</label><strong><Num value={outdoor.temperature_adjusted_c} unit="&deg;C" /></strong></div>
-              <div><label>Humidite ext.</label><strong><Num value={outdoor.humidity_pct} digits={0} unit="%" /></strong></div>
-              <div><label>Vent</label><strong><Num value={outdoor.wind_speed_m_s} unit=" m/s" /></strong></div>
+          {summary && (
+            <div className="cf-status-counts">
+              {summary.ok > 0 && <StatusCount n={summary.ok} status="ok" />}
+              {summary.watch > 0 && <StatusCount n={summary.watch} status="watch" />}
+              {summary.mold_risk > 0 && <StatusCount n={summary.mold_risk} status="mold_risk" />}
+              {summary.condensation > 0 && <StatusCount n={summary.condensation} status="condensation" />}
+              {summary.unknown > 0 && (
+                <div className="cf-status-count" style={{ background: '#334155' }}>
+                  {summary.unknown} sans mesure
+                </div>
+              )}
             </div>
           )}
-        </section>
+        </div>
 
-        {/* ── Formules ──────────────────────────────── */}
-        <section className="cf-card">
-          <h3>3. Calcul de la surface du mur et du point de rosee</h3>
-          <p className="cf-desc">La temperature de la face interieure du mur (T<sub>si</sub>) est :</p>
-          <code className="cf-formula">T<sub>si</sub> = T<sub>int</sub> &minus; (T<sub>int</sub> &minus; T<sub>ext_adj</sub>) &times; f<sub>Rsi</sub></code>
-          <p className="cf-desc">Le point de rosee de l'air interieur (Magnus-Tetens) :</p>
-          <code className="cf-formula cf-formula-multi">
-            &alpha; = ln(RH/100) + 17.27 &middot; T / (237.7 + T)<br />
-            T<sub>rosee</sub> = 237.7 &middot; &alpha; / (17.27 &minus; &alpha;)
-          </code>
-        </section>
-
-        {/* ── Seuils ────────────────────────────────── */}
-        <section className="cf-card">
-          <h3>4. Plages retenues</h3>
-          <div className="cf-status-grid">
-            <div className="cf-status-row" style={{ borderLeftColor: STATUS_COLOR.ok }}>
-              <strong>OK</strong>
-              <span>T<sub>si</sub> &gt; T<sub>rosee</sub> + {COMFORT_CONFIG.condensation.mold_margin_c}&deg;C, T &isin; [{COMFORT_CONFIG.temperature.min_c}, {COMFORT_CONFIG.temperature.max_c}]&deg;C, RH &isin; [{COMFORT_CONFIG.humidity.min_pct}, {COMFORT_CONFIG.humidity.max_pct}]%</span>
-            </div>
-            <div className="cf-status-row" style={{ borderLeftColor: STATUS_COLOR.watch }}>
-              <strong>A surveiller</strong>
-              <span>Temperature hors {COMFORT_CONFIG.temperature.min_c}&ndash;{COMFORT_CONFIG.temperature.max_c}&deg;C ou humidite hors {COMFORT_CONFIG.humidity.min_pct}&ndash;{COMFORT_CONFIG.humidity.max_pct}%, mais pas de risque mur.</span>
-            </div>
-            <div className="cf-status-row" style={{ borderLeftColor: STATUS_COLOR.mold_risk }}>
-              <strong>Risque moisissure</strong>
-              <span>T<sub>si</sub> &minus; T<sub>rosee</sub> &le; {COMFORT_CONFIG.condensation.mold_margin_c}&deg;C (norme DIN 4108-2).</span>
-            </div>
-            <div className="cf-status-row" style={{ borderLeftColor: STATUS_COLOR.condensation }}>
-              <strong>Condensation</strong>
-              <span>T<sub>si</sub> &le; T<sub>rosee</sub> &mdash; eau liquide sur le mur.</span>
-            </div>
-          </div>
-          <p className="cf-hint">
-            Humidite : &lt;{COMFORT_CONFIG.humidity.min_pct}% irrite les muqueuses (zone physiologique seche). &gt;{COMFORT_CONFIG.humidity.max_pct}% favorise acariens et moisissures, meme sans condensation.
+        {/* ── Chart ─────────────────────────────────── */}
+        <section className="cf-chart-section">
+          {loading && <p className="cf-loading">Chargement de la meteo et des releves…</p>}
+          {error && <p className="cf-error">Erreur : {error}</p>}
+          {!loading && !error && (
+            <ComfortChart
+              outdoorTempC={outdoorTempC}
+              rooms={chartRooms}
+              simulator={{ tIntC: simT, rhPct: simH }}
+              onChartClick={(t, rh) => { setSimT(t); setSimH(rh); }}
+            />
+          )}
+          <p className="cf-chart-hint">
+            Cliquez sur le diagramme pour deplacer le point du simulateur,
+            ou utilisez les curseurs ci-dessous.
           </p>
         </section>
 
-        {/* ── Simulateur ───────────────────────────── */}
-        <section className="cf-card">
-          <h3>5. Simulateur</h3>
-          <p className="cf-desc">Joue avec les valeurs pour voir comment la marge evolue.</p>
-          <div className="cf-sim-inputs">
-            <label>
+        {/* ── Simulateur compact ────────────────────── */}
+        <section className="cf-card cf-sim-card">
+          <div className="cf-sim-row">
+            <label className="cf-sim-input">
               <span>Temperature interieure</span>
-              <input type="range" min="10" max="30" step="0.5" value={simT} onChange={(e) => setSimT(parseFloat(e.target.value))} />
-              <strong>{simT.toFixed(1)}&deg;C</strong>
+              <input type="range" min="10" max="30" step="0.5" value={simT}
+                onChange={(e) => setSimT(parseFloat(e.target.value))} />
+              <strong>{simT.toFixed(1)}°C</strong>
             </label>
-            <label>
+            <label className="cf-sim-input">
               <span>Humidite interieure</span>
-              <input type="range" min="10" max="95" step="1" value={simH} onChange={(e) => setSimH(parseFloat(e.target.value))} />
+              <input type="range" min="10" max="95" step="1" value={simH}
+                onChange={(e) => setSimH(parseFloat(e.target.value))} />
               <strong>{simH.toFixed(0)}%</strong>
             </label>
-            <label>
-              <span>Temperature exterieure</span>
-              <input type="range" min="-10" max="35" step="0.5" value={simExt} onChange={(e) => setSimExt(parseFloat(e.target.value))} />
-              <strong>{simExt.toFixed(1)}&deg;C</strong>
-            </label>
           </div>
-          <SimResult evalData={simEval} />
-        </section>
-
-        {/* ── Etat actuel par piece ─────────────────── */}
-        <section className="cf-card">
-          <h3>6. Etat actuel de votre logement</h3>
-          {loading && <p className="cf-desc">Chargement&hellip;</p>}
-          {error && <p className="cf-error">Erreur : {error}</p>}
-          {!loading && !error && current && (
-            <div className="cf-rooms">
-              {current.rooms.length === 0 && <p className="cf-desc">Aucune piece configuree.</p>}
-              {current.rooms.map((r) => (
-                <RoomEvaluation key={r.room_id} room={r} />
-              ))}
+          {simEval && (
+            <div className="cf-sim-result">
+              <StatusPill status={simEval.status} />
+              <div className="cf-sim-derived">
+                <span><label>T paroi</label><Num value={simEval.derived.t_si_c} unit="°C" /></span>
+                <span><label>T rosee</label><Num value={simEval.derived.t_dew_c} unit="°C" /></span>
+                <span><label>Marge</label><Num value={simEval.derived.mold_margin_c} unit="°C" /></span>
+              </div>
             </div>
           )}
         </section>
+
+        {/* ── Pieces ───────────────────────────────── */}
+        {current?.rooms && current.rooms.length > 0 && (
+          <section className="cf-rooms-section">
+            <h3 className="cf-section-title">Detail par piece</h3>
+            <div className="cf-rooms">
+              {current.rooms.map((r) => <RoomCard key={r.room_id} room={r} />)}
+            </div>
+          </section>
+        )}
+
+        {/* ── Details (replies) ────────────────────── */}
+        <section className="cf-card cf-details">
+          <button
+            type="button"
+            className="cf-details-toggle"
+            onClick={() => setShowDetails((s) => !s)}
+            aria-expanded={showDetails}
+          >
+            <span>{showDetails ? '▼' : '▶'} Comment c'est calcule</span>
+          </button>
+          {showDetails && <CalculationDetails outdoor={outdoor} />}
+        </section>
       </div>
     </div>
   );
 }
 
-function SimResult({ evalData }) {
-  const d = evalData.derived;
+/* ── Sub-composants ────────────────────────────────── */
+
+function StatusCount({ n, status }) {
   return (
-    <div className="cf-sim-result">
-      <div className="cf-sim-derived">
-        <div><label>T<sub>ext_adj</sub></label><strong><Num value={evalData.inputs.t_ext_adj_c} unit="&deg;C" /></strong></div>
-        <div><label>T<sub>si</sub> (paroi)</label><strong><Num value={d.t_si_c} unit="&deg;C" /></strong></div>
-        <div><label>T<sub>rosee</sub></label><strong><Num value={d.t_dew_c} unit="&deg;C" /></strong></div>
-        <div><label>Marge paroi-rosee</label><strong><Num value={d.mold_margin_c} unit="&deg;C" /></strong></div>
-      </div>
-      <StatusBadge status={evalData.status} />
-      <ul className="cf-reasons">
-        {evalData.reasons.map((r, i) => (
-          <li key={i} className={`cf-reason cf-${r.severity}`}>{r.text}</li>
-        ))}
-      </ul>
+    <div className="cf-status-count" style={{ background: STATUS_COLOR[status] }}>
+      <strong>{n}</strong> {STATUS_LABEL[status].toLowerCase()}
     </div>
   );
 }
 
-function RoomEvaluation({ room }) {
+function RoomCard({ room }) {
   if (!room.evaluation) {
     return (
-      <div className="cf-room">
-        <div className="cf-room-head">
-          <strong>{room.room_name}</strong>
-          <span className="cf-na">Pas de mesure recente</span>
-        </div>
+      <div className="cf-room cf-room-empty">
+        <strong>{room.room_name}</strong>
+        <span className="cf-na">Pas de mesure recente</span>
       </div>
     );
   }
   const e = room.evaluation;
+  const worst = e.reasons.find((r) => r.severity === 'bad')
+    || e.reasons.find((r) => r.severity === 'warn');
   return (
-    <div className="cf-room">
+    <div className="cf-room" style={{ borderLeftColor: STATUS_COLOR[e.status] }}>
       <div className="cf-room-head">
         <strong>{room.room_name}</strong>
-        <StatusBadge status={e.status} />
+        <StatusPill status={e.status} />
       </div>
-      <div className="cf-room-grid">
-        <div><label>T<sub>int</sub></label><strong><Num value={e.inputs.t_int_c} unit="&deg;C" /></strong></div>
-        <div><label>RH</label><strong><Num value={e.inputs.rh_pct} digits={0} unit="%" /></strong></div>
-        <div><label>T<sub>si</sub></label><strong><Num value={e.derived.t_si_c} unit="&deg;C" /></strong></div>
-        <div><label>T<sub>rosee</sub></label><strong><Num value={e.derived.t_dew_c} unit="&deg;C" /></strong></div>
-        <div><label>Marge</label><strong><Num value={e.derived.mold_margin_c} unit="&deg;C" /></strong></div>
+      <div className="cf-room-mini">
+        <span><label>T</label><Num value={e.inputs.t_int_c} unit="°C" /></span>
+        <span><label>RH</label><Num value={e.inputs.rh_pct} digits={0} unit="%" /></span>
+        <span><label>Paroi</label><Num value={e.derived.t_si_c} unit="°C" /></span>
+        <span><label>Rosee</label><Num value={e.derived.t_dew_c} unit="°C" /></span>
       </div>
-      <ul className="cf-reasons">
-        {e.reasons.map((r, i) => (
-          <li key={i} className={`cf-reason cf-${r.severity}`}>{r.text}</li>
-        ))}
-      </ul>
+      {worst && (
+        <p className={`cf-room-msg cf-${worst.severity}`}>{worst.text}</p>
+      )}
     </div>
   );
 }
 
-function StatusBadge({ status }) {
+function CalculationDetails({ outdoor }) {
+  const wall = COMFORT_CONFIG.wall;
   return (
-    <span className="cf-badge" style={{ background: STATUS_COLOR[status] }}>
-      {STATUS_LABEL[status]}
-    </span>
+    <div className="cf-details-body">
+      <div className="cf-step">
+        <h4>1 · Modele du mur</h4>
+        <p>{wall.description}.</p>
+        <div className="cf-kvgrid">
+          <div><label>Epaisseur</label><strong>{wall.thickness_m} m</strong></div>
+          <div><label>λ brique</label><strong>{wall.conductivity_w_per_mk} W/m·K</strong></div>
+          <div><label>R_mur</label><strong><Num value={wall.r_wall_m2k_per_w} digits={3} unit=" m²K/W" /></strong></div>
+          <div><label>Rsi</label><strong>{wall.rsi_m2k_per_w}</strong></div>
+          <div><label>Rse</label><strong>{wall.rse_m2k_per_w}</strong></div>
+          <div><label>R_total</label><strong><Num value={wall.r_total_m2k_per_w} digits={3} /></strong></div>
+          <div><label>f_Rsi</label><strong><Num value={wall.f_rsi} digits={3} /></strong></div>
+        </div>
+      </div>
+
+      <div className="cf-step">
+        <h4>2 · Correction vent</h4>
+        <p>On retire {COMFORT_CONFIG.outdoor.wind_safety_c}°C a la temperature exterieure ambiante pour modeliser un refroidissement de paroi par vent.</p>
+        <code className="cf-formula">T_ext_adj = T_ext − {COMFORT_CONFIG.outdoor.wind_safety_c}°C</code>
+        {outdoor && (
+          <p className="cf-step-live">
+            Aujourd'hui : <strong><Num value={outdoor.temperature_c} unit="°C" /></strong> ext. →
+            <strong> <Num value={outdoor.temperature_adjusted_c} unit="°C" /></strong> de calcul.
+          </p>
+        )}
+      </div>
+
+      <div className="cf-step">
+        <h4>3 · Temperature de surface du mur</h4>
+        <code className="cf-formula">T_si = T_int − (T_int − T_ext_adj) · f_Rsi</code>
+        <p className="cf-hint">
+          La face interieure du mur recupere {(wall.f_rsi * 100).toFixed(1)}% de l'ecart entre l'air interieur et l'exterieur de calcul.
+        </p>
+      </div>
+
+      <div className="cf-step">
+        <h4>4 · Point de rosee (Magnus-Tetens)</h4>
+        <code className="cf-formula cf-formula-multi">
+          α = ln(RH/100) + 17.27 · T / (237.7 + T)<br />
+          T_rosee = 237.7 · α / (17.27 − α)
+        </code>
+        <p className="cf-hint">Temperature en dessous de laquelle l'air interieur se met a deposer de l'eau liquide sur une surface.</p>
+      </div>
+
+      <div className="cf-step">
+        <h4>5 · Seuils retenus</h4>
+        <ul className="cf-thresholds">
+          <li><strong style={{ color: STATUS_COLOR.ok }}>OK</strong> : T_si &gt; T_rosee + {COMFORT_CONFIG.condensation.mold_margin_c}°C, T ∈ [{COMFORT_CONFIG.temperature.min_c}, {COMFORT_CONFIG.temperature.max_c}]°C, RH ∈ [{COMFORT_CONFIG.humidity.min_pct}, {COMFORT_CONFIG.humidity.max_pct}]%</li>
+          <li><strong style={{ color: STATUS_COLOR.watch }}>A surveiller</strong> : T ou RH hors zone, mais pas de risque mur</li>
+          <li><strong style={{ color: STATUS_COLOR.mold_risk }}>Risque moisissure</strong> : T_si − T_rosee ≤ {COMFORT_CONFIG.condensation.mold_margin_c}°C (norme DIN 4108-2)</li>
+          <li><strong style={{ color: STATUS_COLOR.condensation }}>Condensation</strong> : T_si ≤ T_rosee, eau liquide sur le mur</li>
+        </ul>
+      </div>
+    </div>
   );
 }

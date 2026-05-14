@@ -1,0 +1,42 @@
+.cc-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.cc-svg {
+  width: 100%;
+  height: auto;
+  background: #0a0a14;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.06);
+  cursor: crosshair;
+}
+
+.cc-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  padding: 6px 4px 2px;
+  font-size: 0.78rem;
+  color: #94a3b8;
+}
+
+.cc-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cc-swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  display: inline-block;
+}
+
+.cc-swatch-stroke {
+  background: transparent;
+  border: 2px dashed currentColor;
+}
