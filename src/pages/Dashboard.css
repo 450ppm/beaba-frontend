@@ -125,9 +125,17 @@
   color: #94a3b8;
 }
 .kpi-co2-line strong { color: #f87171; }
+.kpi-co2-projection {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.74rem;
+  color: #fbbf24;
+  line-height: 1.35;
+}
+.kpi-co2-projection strong { color: #f87171; font-weight: 700; }
 .kpi-co2-wink {
   display: block;
-  margin-top: 3px;
+  margin-top: 4px;
   font-size: 0.72rem;
   color: #10b981;
   font-style: italic;

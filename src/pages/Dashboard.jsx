@@ -314,6 +314,12 @@ export default function Dashboard({ onRequestEndMeters }) {
               <span className="kpi-co2-line">
                 Seuil <strong>450 ppm</strong> · Accords de Paris
               </span>
+              {atmoCo2?.years_to_threshold != null && Number.isFinite(atmoCo2.years_to_threshold) && (
+                <span className="kpi-co2-projection">
+                  A ce rythme (+{atmoCo2.annual_increase_ppm.toFixed(1)} ppm/an) :
+                  seuil atteint dans <strong>{atmoCo2.years_to_threshold.toFixed(1)} ans</strong>
+                </span>
+              )}
               <span className="kpi-co2-wink">450ppm.be y travaille tous les jours.</span>
             </>
           }
