@@ -1,0 +1,121 @@
+.dn-wrap {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 14px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  flex-wrap: wrap;
+}
+
+/* ── Period toggle ───────────────────────────── */
+.dn-period {
+  display: inline-flex;
+  background: rgba(0,0,0,0.25);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 10px;
+  padding: 3px;
+  gap: 2px;
+}
+.dn-period-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+  letter-spacing: 0.2px;
+}
+.dn-period-btn:hover { color: #e2e8f0; }
+.dn-period-btn.active {
+  background: linear-gradient(135deg, rgba(245,158,11,0.22), rgba(245,158,11,0.08));
+  color: #fbbf24;
+  box-shadow: inset 0 0 0 1px rgba(245,158,11,0.4);
+}
+
+/* ── Date navigator ──────────────────────────── */
+.dn-nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+  justify-content: center;
+  min-width: 240px;
+}
+.dn-arrow {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.08);
+  color: #cbd5e1;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.dn-arrow:hover:not(:disabled) {
+  background: rgba(255,255,255,0.06);
+  color: #f1f5f9;
+  border-color: rgba(255,255,255,0.18);
+}
+.dn-arrow:disabled { opacity: 0.3; cursor: not-allowed; }
+
+.dn-label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #f1f5f9;
+  padding: 0 10px;
+  min-width: 200px;
+  text-align: center;
+}
+
+/* ── Tools (date picker + aujourd'hui) ──────── */
+.dn-tools {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.dn-picker {
+  background: rgba(0,0,0,0.25);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: #cbd5e1;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 0.82rem;
+  font-family: inherit;
+  color-scheme: dark;
+}
+.dn-picker::-webkit-calendar-picker-indicator {
+  filter: invert(0.8);
+  cursor: pointer;
+}
+.dn-today {
+  background: transparent;
+  border: 1px solid rgba(245,158,11,0.4);
+  color: #fbbf24;
+  padding: 6px 14px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.dn-today:hover:not(:disabled) {
+  background: rgba(245,158,11,0.1);
+  box-shadow: 0 0 12px rgba(245,158,11,0.2);
+}
+.dn-today:disabled { opacity: 0.4; cursor: default; }
+
+@media (max-width: 720px) {
+  .dn-wrap { flex-direction: column; align-items: stretch; }
+  .dn-nav { min-width: 0; }
+  .dn-label { font-size: 0.85rem; min-width: 0; }
+  .dn-tools { justify-content: space-between; }
+}

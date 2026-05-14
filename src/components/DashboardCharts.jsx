@@ -14,11 +14,21 @@ const MODE_OPTIONS = [
   { label: 'Meteo', value: 'weather' },
 ];
 
-const PERIOD_OPTIONS = [
-  { label: '24h', value: '24h' },
-  { label: '7j', value: '7j' },
-  { label: '30j', value: '30j' },
-];
+// Mapping de la vue globale (jour/semaine/mois) vers la granularite chart.
+function periodFromView(period) {
+  if (period === 'day') return '24h';
+  if (period === 'week') return '7j';
+  return '30j';
+}
+
+function isoDay(d) {
+  const x = new Date(d);
+  x.setHours(0, 0, 0, 0);
+  return x.toISOString().slice(0, 10);
+}
+
+function startOfDay(d) { const x = new Date(d); x.setHours(0,0,0,0); return x; }
+function endOfDay(d) { const x = new Date(d); x.setHours(23,59,59,999); return x; }
 
 const APPLIANCE_COLORS = [
   '#f59e0b', '#fb923c', '#f97316', '#fbbf24', '#d97706',
@@ -39,18 +49,8 @@ function formatTime(d) {
   return new Date(d).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
 }
 
-function isoFrom(period) {
-  const now = new Date();
-  if (period === '24h') return new Date(now.getTime() - 86400000).toISOString();
-  if (period === '7j') {
-    const d = new Date(now);
-    d.setDate(d.getDate() - 7);
-    return d.toISOString().slice(0, 10);
-  }
-  const d = new Date(now);
-  d.setDate(d.getDate() - 30);
-  return d.toISOString().slice(0, 10);
-}
+// Plus utilise : le composant suit la vue globale du dashboard (date + periode)
+// au lieu de toujours partir de "maintenant".
 
 function CustomTooltip({ active, payload, label, unit }) {
   if (!active || !payload?.length) return null;
@@ -70,9 +70,8 @@ function CustomTooltip({ active, payload, label, unit }) {
 const AXIS_STYLE = { fill: '#475569', fontSize: 11, fontFamily: 'inherit' };
 const GRID_STROKE = 'rgba(255,255,255,0.04)';
 
-export default function DashboardCharts() {
+export default function DashboardCharts({ view }) {
   const [mode, setMode] = useState('power');
-  const [period, setPeriod] = useState('24h');
   const [powerRealtime, setPowerRealtime] = useState([]);
   const [powerDaily, setPowerDaily] = useState([]);
   const [tempHistory, setTempHistory] = useState([]);
@@ -80,58 +79,78 @@ export default function DashboardCharts() {
   const [weatherSeries, setWeatherSeries] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  // Periode mappee depuis la vue globale (Jour=24h, Semaine=7j, Mois=30j).
+  const period = periodFromView(view?.period || 'day');
+
+  // Fenetre temporelle de la vue : aujourd'hui = comportement live, sinon
+  // borne au jour/semaine/mois selectionne.
+  const windowBounds = useMemo(() => {
+    const today = startOfDay(new Date());
+    const viewDate = view?.date || new Date();
+    const p = view?.period || 'day';
+    if (p === 'day') {
+      const day = startOfDay(viewDate);
+      return { from: day, to: endOfDay(day), isToday: isoDay(day) === isoDay(today) };
+    }
+    if (p === 'week') {
+      const d = new Date(viewDate); d.setHours(0,0,0,0);
+      const dow = (d.getDay() + 6) % 7;
+      d.setDate(d.getDate() - dow);
+      const end = new Date(d); end.setDate(end.getDate() + 6); end.setHours(23,59,59,999);
+      return { from: d, to: end, isToday: today >= d && today <= end };
+    }
+    // month
+    const d = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1);
+    const end = new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 0, 23, 59, 59, 999);
+    return { from: d, to: end, isToday: today >= d && today <= end };
+  }, [view]);
+
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
 
     const fetchData = async () => {
       try {
+        const fromISO = windowBounds.from.toISOString();
+        const toISO = windowBounds.to.toISOString();
+        const fromDate = isoDay(windowBounds.from);
+        const toDate = isoDay(windowBounds.to);
+
         if (mode === 'power') {
           if (period === '24h') {
-            const res = await api.get('/api/readings/power/realtime', {
-              params: { minutes: 1440 },
-            });
-            if (!cancelled) setPowerRealtime(res.data);
+            // Power realtime ne supporte que "now minus N minutes". Si la
+            // journee est aujourd'hui on peut l'utiliser (1440min = 24h),
+            // sinon on bascule sur l'historique par prise. Pour MVP : si
+            // pas aujourd'hui on tombe en /power/daily (1 barre).
+            if (windowBounds.isToday) {
+              const res = await api.get('/api/readings/power/realtime', { params: { minutes: 1440 } });
+              if (!cancelled) { setPowerRealtime(res.data); setPowerDaily([]); }
+            } else {
+              const res = await api.get('/api/readings/power/daily', {
+                params: { from: fromDate, to: toDate },
+              });
+              if (!cancelled) { setPowerDaily(res.data); setPowerRealtime([]); }
+            }
           } else {
             const res = await api.get('/api/readings/power/daily', {
-              params: {
-                from: isoFrom(period),
-                to: new Date().toISOString().slice(0, 10),
-              },
+              params: { from: fromDate, to: toDate },
             });
             if (!cancelled) setPowerDaily(res.data);
           }
         } else if (mode === 'weather') {
           // Archive Open-Meteo : horaire en 24h, journalier au-dela.
+          // ERA5 a ~2 jours de latence : si la fenetre touche ces derniers
+          // jours, l'API peut renvoyer des series tronquees.
           const interval = period === '24h' ? 'hourly' : 'daily';
-          // Pour le mode "24h" l'archive Open-Meteo a ~2 jours de latence
-          // (ERA5). On rapatrie une fenetre glissante "hier" qui est dispo,
-          // sinon les jours plus anciens.
-          const today = new Date();
-          let fromDate, toDate;
-          if (period === '24h') {
-            const d = new Date(today.getTime() - 2 * 86400000);
-            fromDate = d.toISOString().slice(0, 10);
-            toDate = new Date(today.getTime() - 1 * 86400000).toISOString().slice(0, 10);
-          } else {
-            const offset = period === '7j' ? 7 : 30;
-            fromDate = new Date(today.getTime() - offset * 86400000).toISOString().slice(0, 10);
-            toDate = new Date(today.getTime() - 2 * 86400000).toISOString().slice(0, 10);
-          }
           const res = await api.get('/api/weather/history', {
             params: { from: fromDate, to: toDate, interval },
           });
           if (!cancelled) setWeatherSeries(res.data);
         } else {
           const interval = period === '24h' ? 'hour' : 'day';
-          const params = {
-            interval,
-            from: isoFrom(period),
-            to: new Date().toISOString(),
-          };
           const [tempRes, co2Res] = await Promise.all([
-            api.get('/api/readings/temp/history', { params }),
-            api.get('/api/readings/co2/history', { params }).catch(() => ({ data: [] })),
+            api.get('/api/readings/temp/history', { params: { interval, from: fromISO, to: toISO } }),
+            api.get('/api/readings/co2/history', { params: { interval, from: fromISO, to: toISO } }).catch(() => ({ data: [] })),
           ]);
           if (!cancelled) {
             setTempHistory(tempRes.data);
@@ -146,9 +165,11 @@ export default function DashboardCharts() {
     };
 
     fetchData();
-    const id = setInterval(fetchData, period === '24h' ? 30000 : 120000);
+    // Poll live uniquement si la fenetre touche aujourd'hui.
+    const refresh = windowBounds.isToday ? (period === '24h' ? 30000 : 120000) : 5 * 60 * 1000;
+    const id = setInterval(fetchData, refresh);
     return () => { cancelled = true; clearInterval(id); };
-  }, [mode, period]);
+  }, [mode, period, windowBounds]);
 
   // --- Power: aggregate realtime data into time series ---
   const realtimeChartData = useMemo(() => {
@@ -572,7 +593,6 @@ export default function DashboardCharts() {
         </h3>
         <div className="dc-controls">
           <ChartToggle options={MODE_OPTIONS} active={mode} onChange={setMode} />
-          <ChartToggle options={PERIOD_OPTIONS} active={period} onChange={setPeriod} />
         </div>
       </div>
 
