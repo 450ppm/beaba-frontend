@@ -8,7 +8,8 @@
 }
 
 .header-logo {
-  height: 36px;
+  height: 60px;
+  display: block;
 }
 
 .header-info {
