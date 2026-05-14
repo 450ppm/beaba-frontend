@@ -19,6 +19,26 @@ function plugSizeFromPower(w) {
   return Math.max(10, Math.min(22, 10 + Math.log10(1 + safe) * 4));
 }
 
+function roomIconFromName(name) {
+  if (!name) return '🏠';
+  const n = name.toLowerCase();
+  if (/salon|s[eé]jour|living/.test(n)) return '🛋️';
+  if (/cuisine|kitchen/.test(n)) return '🍳';
+  if (/salle.{0,3}(à|a).{0,3}manger|dining/.test(n)) return '🍽️';
+  if (/chambre|bedroom/.test(n)) return '🛏️';
+  if (/salle.{0,3}de.{0,3}bain|sdb|douche|bath/.test(n)) return '🛁';
+  if (/wc|toilette/.test(n)) return '🚽';
+  if (/bureau|office/.test(n)) return '💼';
+  if (/buanderie|laundry|lingerie/.test(n)) return '🧺';
+  if (/entr[eé]e|hall|couloir/.test(n)) return '🚪';
+  if (/garage|parking/.test(n)) return '🚗';
+  if (/cave|cellar/.test(n)) return '🪜';
+  if (/grenier|attic/.test(n)) return '📦';
+  if (/terrasse|balcon|jardin|garden/.test(n)) return '🌳';
+  if (/enfant|kid/.test(n)) return '🧸';
+  return '🏠';
+}
+
 export default function CartoView({ onClose }) {
   const { campaign } = useCampaign();
   const [mapData, setMapData] = useState(null);
@@ -179,18 +199,70 @@ export default function CartoView({ onClose }) {
       const roomSize = 18 + (roomW / maxRoomW) * 24;
 
       const tempInfo = roomTempMap[room.id] || {};
-      const comfort = isComfort(tempInfo.temp);
-      const ringColor = comfort === true ? '#10b981' : comfort === false ? '#ef4444' : null;
+      const co2_ppm = room.co2?.co2_ppm;
+
+      // Build comfort reasoning
+      const reasons = [];
+      let comfortOk = true;
+      let comfortUnknown = true;
+
+      if (tempInfo.temp != null) {
+        comfortUnknown = false;
+        if (tempInfo.temp < 19) {
+          reasons.push({ icon: '🥶', status: 'bad', text: `Trop froid : ${tempInfo.temp.toFixed(1)}°C (confort 19-24°C)` });
+          comfortOk = false;
+        } else if (tempInfo.temp > 24) {
+          reasons.push({ icon: '🥵', status: 'bad', text: `Trop chaud : ${tempInfo.temp.toFixed(1)}°C (confort 19-24°C)` });
+          comfortOk = false;
+        } else {
+          reasons.push({ icon: '🌡️', status: 'good', text: `Température : ${tempInfo.temp.toFixed(1)}°C` });
+        }
+      }
+
+      if (tempInfo.hum != null) {
+        comfortUnknown = false;
+        if (tempInfo.hum < 40) {
+          reasons.push({ icon: '🏜️', status: 'warn', text: `Air sec : ${tempInfo.hum.toFixed(0)}% HR (confort 40-60%)` });
+          comfortOk = false;
+        } else if (tempInfo.hum > 60) {
+          reasons.push({ icon: '💧', status: 'warn', text: `Air humide : ${tempInfo.hum.toFixed(0)}% HR (confort 40-60%)` });
+          comfortOk = false;
+        } else {
+          reasons.push({ icon: '💧', status: 'good', text: `Humidité : ${tempInfo.hum.toFixed(0)}% HR` });
+        }
+      }
+
+      if (co2_ppm != null) {
+        comfortUnknown = false;
+        if (co2_ppm > 1200) {
+          reasons.push({ icon: '🌬️', status: 'bad', text: `CO2 élevé : ${co2_ppm} ppm — aérer la pièce` });
+          comfortOk = false;
+        } else if (co2_ppm > 800) {
+          reasons.push({ icon: '🌬️', status: 'warn', text: `CO2 moyen : ${co2_ppm} ppm` });
+        } else {
+          reasons.push({ icon: '🌬️', status: 'good', text: `Air sain : ${co2_ppm} ppm CO2` });
+        }
+      }
+
+      let ringColor = null;
+      if (!comfortUnknown) {
+        ringColor = comfortOk ? '#10b981' : '#ef4444';
+      }
 
       nodes.push({
         id: `room-${room.id}`,
         type: 'room',
         label: room.name,
+        icon: roomIconFromName(room.name),
         color: roomColor,
         size: roomSize,
         ringColor,
         temp: tempInfo.temp,
         hum: tempInfo.hum,
+        co2: co2_ppm,
+        reasons,
+        comfortOk,
+        comfortUnknown,
         room,
         power_w: roomW,
       });
@@ -304,7 +376,15 @@ export default function CartoView({ onClose }) {
       subtitle = `Appareil — ${hoveredNode.room?.name || ''}`;
     }
 
-    return { title, subtitle, power_w: hoveredNode.power_w, pct };
+    return {
+      title,
+      subtitle,
+      power_w: hoveredNode.power_w,
+      pct,
+      reasons: hoveredNode.type === 'room' ? hoveredNode.reasons : null,
+      comfortOk: hoveredNode.type === 'room' ? hoveredNode.comfortOk : null,
+      comfortUnknown: hoveredNode.type === 'room' ? hoveredNode.comfortUnknown : null,
+    };
   }, [hoveredNode, totalPower]);
 
   /* ── Custom node rendering ─────────────────────────────── */
@@ -416,6 +496,16 @@ export default function CartoView({ onClose }) {
           const txt = parts.join('  ');
           ctx.fillStyle = node.ringColor || '#94a3b8';
           ctx.fillText(txt, node.x, extraY);
+          extraY += h - 2;
+        }
+
+        // CO2 line for rooms — colored by air quality
+        if (node.type === 'room' && node.co2 != null) {
+          let co2Color = '#10b981'; // green
+          if (node.co2 > 1200) co2Color = '#ef4444';
+          else if (node.co2 > 800) co2Color = '#f59e0b';
+          ctx.fillStyle = co2Color;
+          ctx.fillText(`${node.co2} ppm CO2`, node.x, extraY);
         }
       }
     },
@@ -452,7 +542,7 @@ export default function CartoView({ onClose }) {
     <div className="carto-overlay" role="dialog" aria-modal="true">
       <div className="carto-header">
         <div className="carto-title">
-          <span className="carto-title-icon">🗺️</span>
+          <img src="/beaba_banner.png" alt="Beaba" className="carto-logo" />
           <div>
             <h2>Carte du logement</h2>
             <p className="carto-subtitle">
@@ -570,6 +660,28 @@ export default function CartoView({ onClose }) {
                     {' '}— {tooltip.pct}% du foyer
                   </span>
                 )}
+              </div>
+            )}
+            {tooltip.reasons && tooltip.reasons.length > 0 && (
+              <div className="carto-tooltip-reasons">
+                <div className={`carto-tooltip-comfort-badge ${tooltip.comfortOk ? 'good' : 'bad'}`}>
+                  {tooltip.comfortOk ? '✓ Confort OK' : '⚠ Hors zone de confort'}
+                </div>
+                <ul>
+                  {tooltip.reasons.map((r, i) => (
+                    <li key={i} className={`reason-${r.status}`}>
+                      <span className="reason-icon">{r.icon}</span>
+                      <span>{r.text}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {tooltip.comfortUnknown && tooltip.subtitle === 'Piece' && (
+              <div className="carto-tooltip-reasons">
+                <div className="carto-tooltip-comfort-badge neutral">
+                  Pas encore de mesure
+                </div>
               </div>
             )}
           </div>

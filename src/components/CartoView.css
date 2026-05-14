@@ -305,3 +305,79 @@
 
 .carto-ring-green { border-color: #10b981; }
 .carto-ring-red   { border-color: #ef4444; }
+
+/* ── Beaba logo in header ───────────────────────────────── */
+.carto-logo {
+  height: 40px;
+  width: auto;
+  flex-shrink: 0;
+}
+
+/* ── Tooltip comfort reasons ────────────────────────────── */
+.carto-tooltip-reasons {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.carto-tooltip-comfort-badge {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 12px;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.carto-tooltip-comfort-badge.good {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+}
+
+.carto-tooltip-comfort-badge.bad {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+}
+
+.carto-tooltip-comfort-badge.neutral {
+  background: rgba(148, 163, 184, 0.12);
+  color: #94a3b8;
+}
+
+.carto-tooltip-reasons ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.carto-tooltip-reasons li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 0.82rem;
+  color: #cbd5e1;
+  line-height: 1.4;
+}
+
+.reason-icon {
+  flex-shrink: 0;
+  font-size: 0.95rem;
+  line-height: 1.2;
+}
+
+.carto-tooltip-reasons li.reason-good {
+  color: #86efac;
+}
+
+.carto-tooltip-reasons li.reason-warn {
+  color: #fbbf24;
+}
+
+.carto-tooltip-reasons li.reason-bad {
+  color: #fca5a5;
+}
