@@ -1,9 +1,10 @@
+import { COMFORT_CONFIG } from '../lib/comfort';
 import './SensorList.css';
 
 function getComfortClass(temp) {
   if (temp == null) return 'neutral';
-  if (temp < 19) return 'cold';
-  if (temp > 24) return 'hot';
+  if (temp < COMFORT_CONFIG.temperature.min_c) return 'cold';
+  if (temp > COMFORT_CONFIG.temperature.max_c) return 'hot';
   return 'comfort';
 }
 

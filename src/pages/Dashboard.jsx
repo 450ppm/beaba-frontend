@@ -9,11 +9,13 @@ import ApplianceList from '../components/ApplianceList';
 import SensorList from '../components/SensorList';
 import RoomCard from '../components/RoomCard';
 import CartoView from '../components/CartoView';
+import ComfortPage from './ComfortPage';
 import './Dashboard.css';
 
 export default function Dashboard({ onRequestEndMeters }) {
   const { campaign } = useCampaign();
   const [showCarto, setShowCarto] = useState(false);
+  const [showComfort, setShowComfort] = useState(false);
 
   /* ── API polling ─────────────────────────────────────── */
   const { data: mapData, loading: mapLoading } = usePolling(
@@ -106,6 +108,16 @@ export default function Dashboard({ onRequestEndMeters }) {
           <span className="db-carto-icon">🗺️</span>
           <span className="db-carto-label">Carte du logement</span>
         </button>
+        <button
+          type="button"
+          className="db-carto-btn"
+          onClick={() => setShowComfort(true)}
+          aria-label="Plages de confort"
+          title="Methode et plages de confort"
+        >
+          <span className="db-carto-icon">🌡️</span>
+          <span className="db-carto-label">Confort &amp; condensation</span>
+        </button>
       </div>
 
       {/* ── KPI row ──────────────────────────────────── */}
@@ -187,6 +199,7 @@ export default function Dashboard({ onRequestEndMeters }) {
 
       {/* ── Fullscreen carto overlay ─────────────────── */}
       {showCarto && <CartoView onClose={() => setShowCarto(false)} />}
+      {showComfort && <ComfortPage onClose={() => setShowComfort(false)} />}
     </div>
   );
 }

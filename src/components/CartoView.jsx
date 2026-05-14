@@ -3,6 +3,7 @@ import ForceGraph2D from 'react-force-graph-2d';
 import api from '../api';
 import { useCampaign } from '../context/CampaignContext';
 import { categoryIcon } from './applianceCategories';
+import { evaluateRoom, STATUS_COLOR } from '../lib/comfort';
 import PlugDetailModal from './PlugDetailModal';
 import './CartoView.css';
 
@@ -45,6 +46,7 @@ export default function CartoView({ onClose }) {
   const [appliancesByPlug, setAppliancesByPlug] = useState({});
   const [tempData, setTempData] = useState([]);
   const [dailyPower, setDailyPower] = useState([]);
+  const [outdoorTempC, setOutdoorTempC] = useState(null);
   const [mode, setMode] = useState('instant'); // 'instant' | 'avg'
   const [loading, setLoading] = useState(true);
   const [hoveredNode, setHoveredNode] = useState(null);
@@ -57,15 +59,17 @@ export default function CartoView({ onClose }) {
   /* ── Fetch /api/map + per-plug appliances + temp + power daily ── */
   const fetchData = useCallback(async () => {
     try {
-      const [mapRes, tempRes, dailyRes] = await Promise.all([
+      const [mapRes, tempRes, dailyRes, comfortRes] = await Promise.all([
         api.get('/api/map'),
         api.get('/api/readings/temp').catch(() => ({ data: [] })),
         api.get('/api/readings/power/daily').catch(() => ({ data: [] })),
+        api.get('/api/comfort/current').catch(() => ({ data: null })),
       ]);
       const rooms = mapRes.data || [];
       setMapData(rooms);
       setTempData(tempRes.data || []);
       setDailyPower(dailyRes.data || []);
+      setOutdoorTempC(comfortRes.data?.outdoor?.temperature_c ?? null);
 
       const allPlugs = rooms.flatMap((r) => r.plugs || []);
       const entries = await Promise.all(
@@ -159,11 +163,6 @@ export default function CartoView({ onClose }) {
     return result;
   }, [dailyPower, mapData]);
 
-  function isComfort(temp) {
-    if (temp == null) return null;
-    return temp >= 19 && temp <= 24;
-  }
-
   /* ── Build the graph ───────────────────────────────────── */
   const graphData = useMemo(() => {
     if (!mapData) return { nodes: [], links: [] };
@@ -201,52 +200,48 @@ export default function CartoView({ onClose }) {
       const tempInfo = roomTempMap[room.id] || {};
       const co2_ppm = room.co2?.co2_ppm;
 
-      // Build comfort reasoning
+      // Modele physique (paroi + point de rosee) si on a temp/RH et meteo
+      let evaluation = null;
+      if (tempInfo.temp != null && tempInfo.hum != null && outdoorTempC != null) {
+        evaluation = evaluateRoom({
+          tIntC: tempInfo.temp,
+          rhPct: tempInfo.hum,
+          tExtRawC: outdoorTempC,
+        });
+      }
+
+      // reasons[]: on derive de l'evaluation comfort + on ajoute la dimension CO2
       const reasons = [];
-      let comfortOk = true;
-      let comfortUnknown = true;
-
-      if (tempInfo.temp != null) {
-        comfortUnknown = false;
-        if (tempInfo.temp < 19) {
-          reasons.push({ icon: '🥶', status: 'bad', text: `Trop froid : ${tempInfo.temp.toFixed(1)}°C (confort 19-24°C)` });
-          comfortOk = false;
-        } else if (tempInfo.temp > 24) {
-          reasons.push({ icon: '🥵', status: 'bad', text: `Trop chaud : ${tempInfo.temp.toFixed(1)}°C (confort 19-24°C)` });
-          comfortOk = false;
-        } else {
-          reasons.push({ icon: '🌡️', status: 'good', text: `Température : ${tempInfo.temp.toFixed(1)}°C` });
-        }
+      const sevToStatus = { good: 'good', warn: 'warn', bad: 'bad' };
+      const codeToIcon = {
+        condensation: '💦', mold_risk: '🦠', wall_ok: '🧱',
+        cold: '🥶', hot: '🥵', temp_ok: '🌡️',
+        dry: '🏜️', humid: '💧', hum_ok: '💧',
+      };
+      if (evaluation) {
+        evaluation.reasons.forEach((r) => {
+          reasons.push({ icon: codeToIcon[r.code] || '•', status: sevToStatus[r.severity] || 'warn', text: r.text });
+        });
+      } else if (tempInfo.temp != null || tempInfo.hum != null) {
+        // Fallback : meteo indispo, on affiche brut sans verdict
+        if (tempInfo.temp != null) reasons.push({ icon: '🌡️', status: 'good', text: `Temperature : ${tempInfo.temp.toFixed(1)}°C` });
+        if (tempInfo.hum != null) reasons.push({ icon: '💧', status: 'good', text: `Humidite : ${tempInfo.hum.toFixed(0)}%` });
       }
-
-      if (tempInfo.hum != null) {
-        comfortUnknown = false;
-        if (tempInfo.hum < 40) {
-          reasons.push({ icon: '🏜️', status: 'warn', text: `Air sec : ${tempInfo.hum.toFixed(0)}% HR (confort 40-60%)` });
-          comfortOk = false;
-        } else if (tempInfo.hum > 60) {
-          reasons.push({ icon: '💧', status: 'warn', text: `Air humide : ${tempInfo.hum.toFixed(0)}% HR (confort 40-60%)` });
-          comfortOk = false;
-        } else {
-          reasons.push({ icon: '💧', status: 'good', text: `Humidité : ${tempInfo.hum.toFixed(0)}% HR` });
-        }
-      }
-
       if (co2_ppm != null) {
-        comfortUnknown = false;
-        if (co2_ppm > 1200) {
-          reasons.push({ icon: '🌬️', status: 'bad', text: `CO2 élevé : ${co2_ppm} ppm — aérer la pièce` });
-          comfortOk = false;
-        } else if (co2_ppm > 800) {
-          reasons.push({ icon: '🌬️', status: 'warn', text: `CO2 moyen : ${co2_ppm} ppm` });
-        } else {
-          reasons.push({ icon: '🌬️', status: 'good', text: `Air sain : ${co2_ppm} ppm CO2` });
-        }
+        if (co2_ppm > 1200) reasons.push({ icon: '🌬️', status: 'bad', text: `CO2 eleve : ${co2_ppm} ppm — aerer la piece` });
+        else if (co2_ppm > 800) reasons.push({ icon: '🌬️', status: 'warn', text: `CO2 moyen : ${co2_ppm} ppm` });
+        else reasons.push({ icon: '🌬️', status: 'good', text: `Air sain : ${co2_ppm} ppm CO2` });
       }
 
+      const comfortUnknown = !evaluation && co2_ppm == null;
+      const status = evaluation?.status || 'ok';
+      const co2Bad = co2_ppm != null && co2_ppm > 1200;
+      const comfortOk = !comfortUnknown && status === 'ok' && !co2Bad;
       let ringColor = null;
       if (!comfortUnknown) {
-        ringColor = comfortOk ? '#10b981' : '#ef4444';
+        if (status === 'condensation' || status === 'mold_risk' || co2Bad) ringColor = STATUS_COLOR[status === 'ok' ? 'mold_risk' : status];
+        else if (status === 'watch') ringColor = STATUS_COLOR.watch;
+        else ringColor = STATUS_COLOR.ok;
       }
 
       nodes.push({
@@ -325,7 +320,7 @@ export default function CartoView({ onClose }) {
     });
 
     return { nodes, links, totalW };
-  }, [mapData, appliancesByPlug, campaign, mode, avgWByRoom, roomTempMap]);
+  }, [mapData, appliancesByPlug, campaign, mode, avgWByRoom, roomTempMap, outdoorTempC]);
 
   // Tune force-graph layout for better spacing
   useEffect(() => {
