@@ -320,7 +320,6 @@ export default function Dashboard({ onRequestEndMeters }) {
                   seuil atteint dans <strong>{atmoCo2.years_to_threshold.toFixed(1)} ans</strong>
                 </span>
               )}
-              <span className="kpi-co2-wink">450ppm.be y travaille tous les jours.</span>
             </>
           }
         >
