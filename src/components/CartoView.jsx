@@ -23,6 +23,9 @@ export default function CartoView({ onClose }) {
   const { campaign } = useCampaign();
   const [mapData, setMapData] = useState(null);
   const [appliancesByPlug, setAppliancesByPlug] = useState({});
+  const [tempData, setTempData] = useState([]);
+  const [dailyPower, setDailyPower] = useState([]);
+  const [mode, setMode] = useState('instant'); // 'instant' | 'avg'
   const [loading, setLoading] = useState(true);
   const [hoveredNode, setHoveredNode] = useState(null);
   const [selectedPlug, setSelectedPlug] = useState(null);
@@ -31,12 +34,18 @@ export default function CartoView({ onClose }) {
   const containerRef = useRef(null);
   const fgRef = useRef(null);
 
-  /* ── Fetch /api/map + per-plug appliances ──────────────── */
+  /* ── Fetch /api/map + per-plug appliances + temp + power daily ── */
   const fetchData = useCallback(async () => {
     try {
-      const mapRes = await api.get('/api/map');
+      const [mapRes, tempRes, dailyRes] = await Promise.all([
+        api.get('/api/map'),
+        api.get('/api/readings/temp').catch(() => ({ data: [] })),
+        api.get('/api/readings/power/daily').catch(() => ({ data: [] })),
+      ]);
       const rooms = mapRes.data || [];
       setMapData(rooms);
+      setTempData(tempRes.data || []);
+      setDailyPower(dailyRes.data || []);
 
       const allPlugs = rooms.flatMap((r) => r.plugs || []);
       const entries = await Promise.all(
@@ -87,12 +96,62 @@ export default function CartoView({ onClose }) {
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose, selectedPlug]);
 
+  /* ── Aggregations per room ─────────────────────────────── */
+  const roomTempMap = useMemo(() => {
+    const map = {};
+    (tempData || []).forEach((s) => {
+      if (!s.room_id) return;
+      if (!map[s.room_id]) map[s.room_id] = { temps: [], hums: [] };
+      if (s.temperature_c != null) map[s.room_id].temps.push(s.temperature_c);
+      if (s.humidity_pct != null) map[s.room_id].hums.push(s.humidity_pct);
+    });
+    const result = {};
+    Object.entries(map).forEach(([roomId, v]) => {
+      const avgT = v.temps.length ? v.temps.reduce((a, b) => a + b, 0) / v.temps.length : null;
+      const avgH = v.hums.length ? v.hums.reduce((a, b) => a + b, 0) / v.hums.length : null;
+      result[roomId] = { temp: avgT, hum: avgH };
+    });
+    return result;
+  }, [tempData]);
+
+  // Average daily kWh per plug → per room. dailyPower = [{date, plugs: [{plug_id, kwh, ...}], total_kwh}]
+  const avgWByRoom = useMemo(() => {
+    if (!mapData || !dailyPower.length) return {};
+    // Sum kWh per plug across all days, count days
+    const plugKwh = {};
+    const dayCount = dailyPower.length || 1;
+    dailyPower.forEach((d) => {
+      (d.plugs || []).forEach((p) => {
+        plugKwh[p.plug_id] = (plugKwh[p.plug_id] || 0) + (p.kwh || 0);
+      });
+    });
+    // Avg W = (total kWh / days) * 1000 / 24
+    const avgWPerPlug = {};
+    Object.entries(plugKwh).forEach(([pid, kwh]) => {
+      avgWPerPlug[pid] = (kwh / dayCount) * 1000 / 24;
+    });
+    // Sum per room
+    const result = {};
+    mapData.forEach((room) => {
+      const sum = (room.plugs || []).reduce((s, p) => s + (avgWPerPlug[p.id] || 0), 0);
+      result[room.id] = { totalW: sum, perPlug: avgWPerPlug };
+    });
+    return result;
+  }, [dailyPower, mapData]);
+
+  function isComfort(temp) {
+    if (temp == null) return null;
+    return temp >= 19 && temp <= 24;
+  }
+
   /* ── Build the graph ───────────────────────────────────── */
   const graphData = useMemo(() => {
     if (!mapData) return { nodes: [], links: [] };
 
     const householdName = campaign?.household || 'Foyer';
-    const totalW = mapData.reduce((s, r) => s + (r.total_w || 0), 0);
+    const totalW = mode === 'avg'
+      ? mapData.reduce((s, r) => s + (avgWByRoom[r.id]?.totalW || 0), 0)
+      : mapData.reduce((s, r) => s + (r.total_w || 0), 0);
 
     const nodes = [];
     const links = [];
@@ -107,16 +166,33 @@ export default function CartoView({ onClose }) {
       power_w: totalW,
     });
 
-    mapData.forEach((room) => {
+    // Compute room sizes proportional to power
+    const roomPowers = mapData.map((r) =>
+      mode === 'avg' ? (avgWByRoom[r.id]?.totalW || 0) : (r.total_w || 0)
+    );
+    const maxRoomW = Math.max(1, ...roomPowers);
+
+    mapData.forEach((room, idx) => {
       const roomColor = room.color || '#475569';
+      const roomW = roomPowers[idx];
+      // Size varies from 18 (no power) to 42 (max consumer)
+      const roomSize = 18 + (roomW / maxRoomW) * 24;
+
+      const tempInfo = roomTempMap[room.id] || {};
+      const comfort = isComfort(tempInfo.temp);
+      const ringColor = comfort === true ? '#10b981' : comfort === false ? '#ef4444' : null;
+
       nodes.push({
         id: `room-${room.id}`,
         type: 'room',
         label: room.name,
         color: roomColor,
-        size: 20,
+        size: roomSize,
+        ringColor,
+        temp: tempInfo.temp,
+        hum: tempInfo.hum,
         room,
-        power_w: room.total_w || 0,
+        power_w: roomW,
       });
 
       links.push({
@@ -177,7 +253,7 @@ export default function CartoView({ onClose }) {
     });
 
     return { nodes, links, totalW };
-  }, [mapData, appliancesByPlug, campaign]);
+  }, [mapData, appliancesByPlug, campaign, mode, avgWByRoom, roomTempMap]);
 
   // Tune force-graph layout for better spacing
   useEffect(() => {
@@ -265,6 +341,15 @@ export default function CartoView({ onClose }) {
         ctx.fill();
       }
 
+      // Comfort ring for rooms (drawn behind main circle)
+      if (node.type === 'room' && node.ringColor) {
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, node.size + 5, 0, 2 * Math.PI);
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = node.ringColor;
+        ctx.stroke();
+      }
+
       // Main circle
       ctx.beginPath();
       ctx.arc(node.x, node.y, node.size, 0, 2 * Math.PI);
@@ -313,16 +398,24 @@ export default function CartoView({ onClose }) {
         ctx.fillText(label, node.x, y);
 
         // Watt line for plugs and rooms
+        let extraY = y + h + 1;
         if (
           (node.type === 'plug' || node.type === 'room') &&
           node.power_w > 0
         ) {
           ctx.fillStyle = ACCENT;
-          ctx.fillText(
-            `${node.power_w.toFixed(0)} W`,
-            node.x,
-            y + h + 1
-          );
+          ctx.fillText(`${node.power_w.toFixed(0)} W`, node.x, extraY);
+          extraY += h - 2;
+        }
+
+        // Temp / humidity line for rooms
+        if (node.type === 'room' && (node.temp != null || node.hum != null)) {
+          const parts = [];
+          if (node.temp != null) parts.push(`${node.temp.toFixed(1)}°`);
+          if (node.hum != null) parts.push(`${node.hum.toFixed(0)}%`);
+          const txt = parts.join('  ');
+          ctx.fillStyle = node.ringColor || '#94a3b8';
+          ctx.fillText(txt, node.x, extraY);
         }
       }
     },
@@ -371,6 +464,22 @@ export default function CartoView({ onClose }) {
           </div>
         </div>
         <div className="carto-header-actions">
+          <div className="carto-mode-toggle">
+            <button
+              type="button"
+              className={`carto-mode-btn ${mode === 'instant' ? 'active' : ''}`}
+              onClick={() => setMode('instant')}
+            >
+              Instantané
+            </button>
+            <button
+              type="button"
+              className={`carto-mode-btn ${mode === 'avg' ? 'active' : ''}`}
+              onClick={() => setMode('avg')}
+            >
+              Moyenne
+            </button>
+          </div>
           <button
             type="button"
             className="carto-btn-ghost"
@@ -395,8 +504,12 @@ export default function CartoView({ onClose }) {
           Foyer
         </span>
         <span className="carto-legend-item">
-          <span className="carto-dot" style={{ background: '#22c55e' }} />
-          Pieces
+          <span className="carto-ring carto-ring-green" />
+          Confort OK
+        </span>
+        <span className="carto-legend-item">
+          <span className="carto-ring carto-ring-red" />
+          Hors confort
         </span>
         <span className="carto-legend-item">
           <span className="carto-dot" style={{ background: PLUG_ACTIVE_COLOR }} />

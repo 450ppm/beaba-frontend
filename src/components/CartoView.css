@@ -262,3 +262,46 @@
     white-space: normal;
   }
 }
+
+/* ── Mode toggle (instant / avg) ─────────────────────── */
+.carto-mode-toggle {
+  display: inline-flex;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 2px;
+  gap: 2px;
+}
+
+.carto-mode-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.carto-mode-btn:hover {
+  color: #e5e7eb;
+}
+
+.carto-mode-btn.active {
+  background: rgba(245, 158, 11, 0.18);
+  color: #f59e0b;
+}
+
+.carto-ring {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid;
+  background: transparent;
+}
+
+.carto-ring-green { border-color: #10b981; }
+.carto-ring-red   { border-color: #ef4444; }
