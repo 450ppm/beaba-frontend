@@ -19,6 +19,18 @@
   background: rgba(13,13,26,0.7);
   backdrop-filter: blur(6px);
 }
+.cf-brand {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+.cf-logo {
+  height: 60px;
+  width: auto;
+  flex-shrink: 0;
+  display: block;
+}
 .cf-title h2 {
   margin: 0;
   font-size: 1.3rem;

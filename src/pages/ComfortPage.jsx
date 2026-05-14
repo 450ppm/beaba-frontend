@@ -95,12 +95,15 @@ export default function ComfortPage({ onClose }) {
     <div className="cf-overlay" role="dialog" aria-modal="true">
       {/* ── Header ─────────────────────────────────── */}
       <div className="cf-header">
-        <div className="cf-title">
-          <h2>Confort &amp; condensation</h2>
-          <p className="cf-subtitle">
-            Chaque piece est evaluee selon le risque de condensation sur la
-            face interieure d'un mur exterieur (brique 30 cm non isolee).
-          </p>
+        <div className="cf-brand">
+          <img src="/beaba_banner.png" alt="Beaba" className="cf-logo" />
+          <div className="cf-title">
+            <h2>Confort &amp; condensation</h2>
+            <p className="cf-subtitle">
+              Chaque piece est evaluee selon le risque de condensation sur la
+              face interieure d'un mur exterieur (brique 30 cm non isolee).
+            </p>
+          </div>
         </div>
         <button className="cf-close" onClick={onClose} aria-label="Fermer">&times;</button>
       </div>

@@ -308,9 +308,10 @@
 
 /* ── Beaba logo in header ───────────────────────────────── */
 .carto-logo {
-  height: 40px;
+  height: 60px;
   width: auto;
   flex-shrink: 0;
+  display: block;
 }
 
 /* ── Tooltip comfort reasons ────────────────────────────── */
