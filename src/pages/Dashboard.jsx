@@ -10,6 +10,7 @@ import SensorList from '../components/SensorList';
 import RoomCard from '../components/RoomCard';
 import CartoView from '../components/CartoView';
 import ComfortPage from './ComfortPage';
+import ChaudierePage from './ChaudierePage';
 import DateNav, { viewWindow, isLiveView } from '../components/DateNav';
 import { weatherIcon, weatherLabel } from '../lib/weatherCodes';
 import './Dashboard.css';
@@ -54,6 +55,7 @@ export default function Dashboard({ onRequestEndMeters }) {
   const { campaign } = useCampaign();
   const [showCarto, setShowCarto] = useState(false);
   const [showComfort, setShowComfort] = useState(false);
+  const [showChaudiere, setShowChaudiere] = useState(false);
 
   /* ── Vue temporelle (date + periode) ─────────────────── */
   const [view, setView] = useState({ date: new Date(), period: 'day' });
@@ -232,6 +234,15 @@ export default function Dashboard({ onRequestEndMeters }) {
             <span className="db-action-icon">🌡️</span>
             <span className="db-action-label">Confort &amp; condensation</span>
           </button>
+          <button
+            type="button"
+            className="db-action-btn db-action-boiler"
+            onClick={() => setShowChaudiere(true)}
+            aria-label="Chaudiere et cycles"
+          >
+            <span className="db-action-icon">🔥</span>
+            <span className="db-action-label">Chaudiere</span>
+          </button>
         </div>
       </header>
 
@@ -373,6 +384,7 @@ export default function Dashboard({ onRequestEndMeters }) {
       {/* ── Fullscreen overlays ──────────────────────── */}
       {showCarto && <CartoView onClose={() => setShowCarto(false)} />}
       {showComfort && <ComfortPage onClose={() => setShowComfort(false)} />}
+      {showChaudiere && <ChaudierePage onClose={() => setShowChaudiere(false)} />}
     </div>
   );
 }
