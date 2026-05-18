@@ -42,6 +42,7 @@ export default function ComfortPage({ onClose }) {
 
   // Details replies par defaut
   const [showDetails, setShowDetails] = useState(false);
+  const [zoom, setZoom] = useState(true);
 
   useEffect(() => {
     let alive = true;
@@ -135,6 +136,20 @@ export default function ComfortPage({ onClose }) {
 
         {/* ── Chart ─────────────────────────────────── */}
         <section className="cf-chart-section">
+          <div className="cf-chart-toolbar">
+            <div className="cf-zoom-toggle">
+              <button
+                type="button"
+                className={zoom ? 'active' : ''}
+                onClick={() => setZoom(true)}
+              >Zoom confort</button>
+              <button
+                type="button"
+                className={!zoom ? 'active' : ''}
+                onClick={() => setZoom(false)}
+              >Vue complète</button>
+            </div>
+          </div>
           {loading && <p className="cf-loading">Chargement de la meteo et des releves…</p>}
           {error && <p className="cf-error">Erreur : {error}</p>}
           {!loading && !error && (
@@ -143,11 +158,13 @@ export default function ComfortPage({ onClose }) {
               rooms={chartRooms}
               simulator={{ tIntC: simT, rhPct: simH }}
               onChartClick={(t, rh) => { setSimT(t); setSimH(rh); }}
+              zoom={zoom}
             />
           )}
           <p className="cf-chart-hint">
             Cliquez sur le diagramme pour deplacer le point du simulateur,
             ou utilisez les curseurs ci-dessous.
+            {zoom && ' Zoom : 14–28°C / 15–85% HR.'}
           </p>
         </section>
 

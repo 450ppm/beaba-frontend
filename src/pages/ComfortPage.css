@@ -135,6 +135,36 @@
   margin: 8px 0 0;
 }
 
+.cf-chart-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 10px;
+}
+.cf-zoom-toggle {
+  display: inline-flex;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px;
+  padding: 2px;
+  gap: 2px;
+}
+.cf-zoom-toggle button {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.cf-zoom-toggle button:hover { color: #e5e7eb; }
+.cf-zoom-toggle button.active {
+  background: rgba(6,182,212,0.18);
+  color: #67e8f9;
+}
+
 /* ── Cards ────────────────────────────────────────────── */
 .cf-card {
   background: rgba(255,255,255,0.03);
