@@ -59,6 +59,13 @@
   text-overflow: ellipsis;
 }
 
+.sensor-subname {
+  margin-left: 8px;
+  font-size: 0.74rem;
+  color: #64748b;
+  font-weight: 400;
+}
+
 .sensor-values {
   display: flex;
   align-items: baseline;

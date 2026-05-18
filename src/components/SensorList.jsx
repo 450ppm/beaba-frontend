@@ -57,6 +57,9 @@ export default function SensorList({ tempData, co2Data }) {
               <div className="sensor-info">
                 <span className="sensor-name">
                   {sensor.room_name || sensor.sensor_name}
+                  {sensor.room_name && sensor.sensor_name && (
+                    <span className="sensor-subname">{sensor.sensor_name}</span>
+                  )}
                 </span>
                 <BatteryIcon pct={sensor.battery_pct} />
               </div>
@@ -81,6 +84,9 @@ export default function SensorList({ tempData, co2Data }) {
                 <span className="sensor-name">
                   <span className="sensor-co2-label">CO2</span>
                   {sensor.room_name || sensor.sensor_name}
+                  {sensor.room_name && sensor.sensor_name && (
+                    <span className="sensor-subname">{sensor.sensor_name}</span>
+                  )}
                 </span>
                 {calibrated && (
                   <span className="sensor-co2-cal-badge" title={`Calibre : offset ${sensor.calibration_offset_ppm > 0 ? '+' : ''}${sensor.calibration_offset_ppm} ppm`}>
