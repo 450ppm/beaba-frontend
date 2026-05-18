@@ -5,6 +5,7 @@ import { useCampaign } from '../context/CampaignContext';
 import { categoryIcon } from './applianceCategories';
 import { evaluateRoom, STATUS_COLOR } from '../lib/comfort';
 import PlugDetailModal from './PlugDetailModal';
+import RoomEditModal from './RoomEditModal';
 import './CartoView.css';
 
 const ACCENT = '#f59e0b';
@@ -51,6 +52,7 @@ export default function CartoView({ onClose }) {
   const [loading, setLoading] = useState(true);
   const [hoveredNode, setHoveredNode] = useState(null);
   const [selectedPlug, setSelectedPlug] = useState(null);
+  const [selectedRoom, setSelectedRoom] = useState(null);
   const [size, setSize] = useState({ width: 800, height: 600 });
 
   const containerRef = useRef(null);
@@ -114,11 +116,11 @@ export default function CartoView({ onClose }) {
   /* ── ESC to close ──────────────────────────────────────── */
   useEffect(() => {
     const onKey = (e) => {
-      if (e.key === 'Escape' && !selectedPlug) onClose?.();
+      if (e.key === 'Escape' && !selectedPlug && !selectedRoom) onClose?.();
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [onClose, selectedPlug]);
+  }, [onClose, selectedPlug, selectedRoom]);
 
   /* ── Aggregations per room ─────────────────────────────── */
   const roomTempMap = useMemo(() => {
@@ -348,6 +350,8 @@ export default function CartoView({ onClose }) {
   const handleNodeClick = (node) => {
     if (node.type === 'plug' || node.type === 'appliance') {
       setSelectedPlug({ plug: node.plug, room: node.room });
+    } else if (node.type === 'room') {
+      setSelectedRoom(node.room);
     }
   };
 
@@ -690,6 +694,14 @@ export default function CartoView({ onClose }) {
           room={selectedPlug.room}
           onClose={() => setSelectedPlug(null)}
           onUpdated={fetchData}
+        />
+      )}
+
+      {selectedRoom && (
+        <RoomEditModal
+          room={selectedRoom}
+          onClose={() => setSelectedRoom(null)}
+          onSaved={fetchData}
         />
       )}
     </div>
