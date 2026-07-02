@@ -6,24 +6,35 @@ import ColorPicker from '../components/ColorPicker';
 import MeterReadingsPage from './MeterReadingsPage';
 import './SetupWizard.css';
 
-export default function SetupWizard() {
+export default function SetupWizard({ editMode = false, onExit }) {
   const { campaign, refreshCampaign } = useCampaign();
-  const [step, setStep] = useState(1);
+  // En mode edition (campagne deja active), on saute la preparation et les
+  // releves de compteurs : on demarre directement sur les pieces.
+  const [step, setStep] = useState(editMode ? 3 : 1);
 
   return (
     <div className="setup-wizard">
       <div className="setup-header">
         <img src="/beaba_banner.png" alt="Beaba" className="setup-logo" />
         <h1>{campaign?.household || 'Configuration'}</h1>
+        {editMode && (
+          <p className="setup-edit-hint">
+            Ajout / modification des appareils — l'enregistrement continue en arriere-plan.
+          </p>
+        )}
       </div>
-      <StepIndicator current={step} />
+      <StepIndicator current={step} editMode={editMode} />
       <div className="setup-content">
         {step === 1 && <StepPreparation onNext={() => setStep(2)} />}
         {step === 2 && (
           <StepStartMeters onNext={() => setStep(3)} onBack={() => setStep(1)} />
         )}
         {step === 3 && (
-          <StepRooms onNext={() => setStep(4)} onBack={() => setStep(2)} />
+          <StepRooms
+            onNext={() => setStep(4)}
+            onBack={editMode ? onExit : () => setStep(2)}
+            backLabel={editMode ? 'Retour au tableau de bord' : undefined}
+          />
         )}
         {step === 4 && (
           <StepTempSensors onNext={() => setStep(5)} onBack={() => setStep(3)} />
@@ -39,6 +50,8 @@ export default function SetupWizard() {
             campaignId={campaign?.id}
             refreshCampaign={refreshCampaign}
             onBack={() => setStep(6)}
+            editMode={editMode}
+            onExit={onExit}
           />
         )}
       </div>
@@ -117,7 +130,7 @@ function StepPreparation({ onNext }) {
 }
 
 /* ── Step 1: Rooms ─────────────────────────────────────── */
-function StepRooms({ onNext, onBack }) {
+function StepRooms({ onNext, onBack, backLabel }) {
   const [rooms, setRooms] = useState([]);
   const [name, setName] = useState('');
   const [color, setColor] = useState('#4A90D9');
@@ -193,7 +206,7 @@ function StepRooms({ onNext, onBack }) {
       </form>
 
       <div className="step-nav">
-        <button className="btn-back" onClick={onBack}>Retour</button>
+        <button className="btn-back" onClick={onBack}>{backLabel || 'Retour'}</button>
         <button className="btn-primary" onClick={onNext} disabled={rooms.length === 0}>
           Suivant
         </button>
@@ -654,7 +667,7 @@ function StepPlugs({ onNext, onBack }) {
 }
 
 /* ── Step 4: Summary ───────────────────────────────────── */
-function StepSummary({ campaignId, refreshCampaign, onBack }) {
+function StepSummary({ campaignId, refreshCampaign, onBack, editMode = false, onExit }) {
   const [rooms, setRooms] = useState([]);
   const [sensors, setSensors] = useState([]);
   const [co2Sensors, setCo2Sensors] = useState([]);
@@ -695,7 +708,9 @@ function StepSummary({ campaignId, refreshCampaign, onBack }) {
     <div className="step-panel">
       <h2>Resume de la configuration</h2>
       <p className="step-desc">
-        Verifiez que tout est correct avant de lancer l'enregistrement.
+        {editMode
+          ? 'Vos modifications sont deja enregistrees. Revenez au tableau de bord quand vous avez termine.'
+          : "Verifiez que tout est correct avant de lancer l'enregistrement."}
       </p>
 
       <div className="summary-rooms">
@@ -751,9 +766,15 @@ function StepSummary({ campaignId, refreshCampaign, onBack }) {
 
       <div className="step-nav">
         <button className="btn-back" onClick={onBack}>Retour</button>
-        <button className="btn-primary btn-activate" onClick={activate} disabled={activating}>
-          {activating ? 'Activation...' : "Demarrer l'enregistrement"}
-        </button>
+        {editMode ? (
+          <button className="btn-primary" onClick={onExit}>
+            Retour au tableau de bord
+          </button>
+        ) : (
+          <button className="btn-primary btn-activate" onClick={activate} disabled={activating}>
+            {activating ? 'Activation...' : "Demarrer l'enregistrement"}
+          </button>
+        )}
       </div>
     </div>
   );

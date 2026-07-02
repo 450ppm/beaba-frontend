@@ -50,7 +50,7 @@ function Co2Gauge({ ppm, threshold = 450, preindustrial = 280 }) {
   );
 }
 
-export default function Dashboard({ onRequestEndMeters }) {
+export default function Dashboard({ onRequestEndMeters, onRequestConfig }) {
   const { campaign } = useCampaign();
   const [showCarto, setShowCarto] = useState(false);
   const [showComfort, setShowComfort] = useState(false);
@@ -242,6 +242,17 @@ export default function Dashboard({ onRequestEndMeters }) {
             <span className="db-action-icon">🔥</span>
             <span className="db-action-label">Chaudiere &amp; ECS</span>
           </button>
+          {onRequestConfig && (
+            <button
+              type="button"
+              className="db-action-btn db-action-config"
+              onClick={onRequestConfig}
+              aria-label="Ajouter ou modifier des appareils"
+            >
+              <span className="db-action-icon">➕</span>
+              <span className="db-action-label">Ajouter des appareils</span>
+            </button>
+          )}
         </div>
       </header>
 

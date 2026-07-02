@@ -21,6 +21,13 @@
   font-weight: 500;
 }
 
+.setup-edit-hint {
+  margin: 8px auto 0;
+  max-width: 460px;
+  font-size: 0.85rem;
+  color: #f59e0b;
+}
+
 .setup-content {
   padding: 0 4px;
 }

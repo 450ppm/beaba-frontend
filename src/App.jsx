@@ -45,6 +45,7 @@ function AdminRoute({ children }) {
 function AppContent() {
   const { campaign, loading, noCampaign, refreshCampaign } = useCampaign();
   const [showEndMeters, setShowEndMeters] = useState(false);
+  const [showConfig, setShowConfig] = useState(false);
 
   if (loading) {
     return <div className="loading">Chargement...</div>;
@@ -68,6 +69,17 @@ function AppContent() {
       <>
         <Header />
         <ReportPage />
+      </>
+    );
+  }
+
+  // Active campaign — reouverture de l'assistant pour ajouter/modifier des
+  // pieces, capteurs ou prises apres le demarrage de l'enregistrement.
+  if (showConfig) {
+    return (
+      <>
+        <Header />
+        <SetupWizard editMode onExit={() => setShowConfig(false)} />
       </>
     );
   }
@@ -96,7 +108,10 @@ function AppContent() {
   return (
     <>
       <Header />
-      <Dashboard onRequestEndMeters={() => setShowEndMeters(true)} />
+      <Dashboard
+        onRequestEndMeters={() => setShowEndMeters(true)}
+        onRequestConfig={() => setShowConfig(true)}
+      />
     </>
   );
 }
